@@ -78,9 +78,9 @@ func BenchmarkConcurrentVector(b *testing.B) {
 				case <-ctx.Done():
 					return
 				default:
-					vec.Set(i)
-					vec.Clear(i)
-					vec.Set(i)
+					vec.Set(i % size)
+					vec.Clear(i % size)
+					vec.Set(i % size)
 				}
 			}
 		}(ctx, vec)
