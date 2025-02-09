@@ -1,6 +1,7 @@
 package bitvector
 
 import (
+	"encoding/binary"
 	"io"
 	"sync/atomic"
 )
@@ -80,11 +81,47 @@ func (vec *ConcurrentVector) Reset() {
 }
 
 func (vec *ConcurrentVector) ReadFrom(r io.Reader) (int64, error) {
-	// todo implement me
-	return 0, nil
+	var n int
+	for {
+		n1, err := r.Read(vec.blk[:])
+		if err != nil && err != io.EOF {
+			return int64(n), err
+		}
+		n += n1
+		for i := 0; i < n1; i += 4 {
+			v := binary.LittleEndian.Uint32(vec.blk[i:])
+			atomic.StoreUint32(&vec.buf[i/4], v)
+		}
+		if err == io.EOF {
+			break
+		}
+	}
+	return int64(n), nil
 }
 
 func (vec *ConcurrentVector) WriteTo(w io.Writer) (int64, error) {
-	// todo implement me
-	return 0, nil
+	var off, n int
+	for i := 0; i < len(vec.buf); i++ {
+		v := atomic.LoadUint32(&vec.buf[i])
+		binary.LittleEndian.PutUint32(vec.blk[off:], v)
+		if off += 4; off == blockSz {
+			n1, err := w.Write(vec.blk[:off])
+			n += n1
+			if err != nil {
+				return int64(n), err
+			}
+			if n1 < blockSz {
+				return int64(n), io.ErrShortWrite
+			}
+			off = 0
+		}
+	}
+	if off > 0 {
+		n1, err := w.Write(vec.blk[:off])
+		n += n1
+		if err != nil {
+			return int64(n), err
+		}
+	}
+	return int64(n), nil
 }
