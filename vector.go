@@ -25,8 +25,8 @@ func (vec *Vector) Set(i uint64) bool {
 	return true
 }
 
-// Clear clears bit at given position.
-func (vec *Vector) Clear(i uint64) bool {
+// Unset clears bit at given position.
+func (vec *Vector) Unset(i uint64) bool {
 	if len(vec.buf) <= int(i/8) {
 		return false
 	}
@@ -34,7 +34,7 @@ func (vec *Vector) Clear(i uint64) bool {
 	return true
 }
 
-// Get returns a bit value from given position.
+// Get returns bit value from given position.
 func (vec *Vector) Get(i uint64) uint8 {
 	if len(vec.buf) <= int(i/8) {
 		return 0

@@ -33,7 +33,7 @@ func TestConcurrentVector(t *testing.T) {
 	})
 	t.Run("clear", func(t *testing.T) {
 		vec := prepare(10)
-		vec.Clear(5)
+		vec.Unset(5)
 		if vec.Get(5) != 0 {
 			t.Fail()
 		}
@@ -61,7 +61,7 @@ func BenchmarkConcurrentVector(b *testing.B) {
 		vec, _ := NewConcurrentVector(10, 1)
 		vec.Set(5)
 		for i := 0; i < b.N; i++ {
-			vec.Clear(5)
+			vec.Unset(5)
 		}
 	})
 	b.Run("parallel io", func(b *testing.B) {
@@ -79,7 +79,7 @@ func BenchmarkConcurrentVector(b *testing.B) {
 					return
 				default:
 					vec.Set(i % size)
-					vec.Clear(i % size)
+					vec.Unset(i % size)
 					vec.Set(i % size)
 				}
 			}

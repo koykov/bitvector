@@ -37,8 +37,8 @@ func (vec *ConcurrentVector) Set(i uint64) bool {
 	return false
 }
 
-// Clear clears bit at given position.
-func (vec *ConcurrentVector) Clear(i uint64) bool {
+// Unset clears bit at given position.
+func (vec *ConcurrentVector) Unset(i uint64) bool {
 	if len(vec.buf) <= int(i/32) {
 		return false
 	}
@@ -53,7 +53,7 @@ func (vec *ConcurrentVector) Clear(i uint64) bool {
 	return false
 }
 
-// Get returns a bit value from given position.
+// Get returns bit value from given position.
 func (vec *ConcurrentVector) Get(i uint64) uint8 {
 	if len(vec.buf) <= int(i/32) {
 		return 0

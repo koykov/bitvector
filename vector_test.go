@@ -28,7 +28,7 @@ func TestVector(t *testing.T) {
 	})
 	t.Run("clear", func(t *testing.T) {
 		vec := prepare(10)
-		vec.Clear(5)
+		vec.Unset(5)
 		if vec.Get(5) != 0 {
 			t.Fail()
 		}
@@ -56,7 +56,7 @@ func BenchmarkVector(b *testing.B) {
 		vec, _ := NewVector(10)
 		vec.Set(5)
 		for i := 0; i < b.N; i++ {
-			vec.Clear(5)
+			vec.Unset(5)
 		}
 	})
 }
