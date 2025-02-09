@@ -1,11 +1,17 @@
 package bitvector
 
-import "sync/atomic"
+import (
+	"io"
+	"sync/atomic"
+)
+
+const blockSz = 4096
 
 // ConcurrentVector represents concurrent bit array implementation with race protection. Simultaneous read/write
 // operations are possible.
 type ConcurrentVector struct {
 	buf []uint32
+	blk [blockSz]byte
 	lim uint64
 }
 
@@ -71,4 +77,14 @@ func (vec *ConcurrentVector) Reset() {
 	for i := 0; i < n; i++ {
 		atomic.StoreUint32(&vec.buf[i], 0)
 	}
+}
+
+func (vec *ConcurrentVector) ReadFrom(r io.Reader) (int64, error) {
+	// todo implement me
+	return 0, nil
+}
+
+func (vec *ConcurrentVector) WriteTo(w io.Writer) (int64, error) {
+	// todo implement me
+	return 0, nil
 }

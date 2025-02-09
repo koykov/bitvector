@@ -1,7 +1,11 @@
 package bitvector
 
+import "io"
+
 // Interface describes bit array interface.
 type Interface interface {
+	io.ReaderFrom
+	io.WriterTo
 	// Set writes new bit at given position.
 	Set(uint64) bool
 	// Unset clears bit at given position.

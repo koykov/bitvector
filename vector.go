@@ -1,6 +1,10 @@
 package bitvector
 
-import "github.com/koykov/openrt"
+import (
+	"io"
+
+	"github.com/koykov/openrt"
+)
 
 // Vector represents simple bit array implementation without race protection. It means you may do concurrent read, but
 // cannot do simultaneous read/write operations.
@@ -48,4 +52,14 @@ func (vec *Vector) Reset() {
 		return
 	}
 	openrt.Memclr(vec.buf)
+}
+
+func (vec *Vector) ReadFrom(r io.Reader) (int64, error) {
+	n, err := r.Read(vec.buf)
+	return int64(n), err
+}
+
+func (vec *Vector) WriteTo(w io.Writer) (int64, error) {
+	n, err := w.Write(vec.buf)
+	return int64(n), err
 }
