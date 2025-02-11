@@ -32,7 +32,7 @@ func TestConcurrentVector(t *testing.T) {
 			}
 		}
 	})
-	t.Run("clear", func(t *testing.T) {
+	t.Run("unset", func(t *testing.T) {
 		vec := prepare(10)
 		vec.Unset(5)
 		if vec.Get(5) != 0 {
@@ -87,7 +87,7 @@ func BenchmarkConcurrentVector(b *testing.B) {
 			vec.Get(5)
 		}
 	})
-	b.Run("clear", func(b *testing.B) {
+	b.Run("unset", func(b *testing.B) {
 		b.ReportAllocs()
 		vec, _ := NewConcurrentVector(10, 1)
 		vec.Set(5)
