@@ -1,7 +1,10 @@
 package bitvector
 
 import (
+	"context"
+	"math"
 	"os"
+	"sync/atomic"
 	"testing"
 )
 
@@ -91,5 +94,33 @@ func BenchmarkVector(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			vec.Get(5)
 		}
+	})
+	b.Run("parallel io", func(b *testing.B) {
+		b.ReportAllocs()
+
+		const size = 1e6
+		vec, _ := NewVector(size)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go func(ctx context.Context, vec *Vector) {
+			for i := uint64(0); ; i++ {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					vec.Set(i % size)
+					vec.Unset(i % size)
+					vec.Set(i % size)
+				}
+			}
+		}(ctx, vec)
+
+		var i uint64 = math.MaxUint64
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				vec.Get(atomic.AddUint64(&i, 1))
+			}
+		})
 	})
 }
