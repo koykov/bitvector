@@ -25,7 +25,7 @@ func (vec *Vector) Set(i uint64) bool {
 	if len(vec.buf) <= int(i/8) {
 		return false
 	}
-	vec.buf[i/8] |= 1 << uint8(i%8)
+	vec.buf[i/8] |= 1 << i % 8
 	return true
 }
 
@@ -34,7 +34,7 @@ func (vec *Vector) Unset(i uint64) bool {
 	if len(vec.buf) <= int(i/8) {
 		return false
 	}
-	vec.buf[i/8] &^= 1 << uint8(i%8)
+	vec.buf[i/8] &^= 1 << i % 8
 	return true
 }
 
