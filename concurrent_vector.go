@@ -24,7 +24,7 @@ func NewConcurrentVector(size, writeAttemptsLimit uint64) (*ConcurrentVector, er
 	}
 	return &ConcurrentVector{
 		buf: make([]uint32, size/32+1),
-		lim: writeAttemptsLimit,
+		lim: writeAttemptsLimit + 1,
 	}, nil
 }
 
@@ -33,10 +33,12 @@ func (vec *ConcurrentVector) Set(i uint64) bool {
 	if len(vec.buf) <= int(i/32) {
 		return false
 	}
+	i32 := uint32(i % 32)
 	var j uint64
 	for j = 0; j < vec.lim; j++ {
 		o := atomic.LoadUint32(&vec.buf[i/32])
-		n := o | 1<<(i%32)
+		y := uint32(1 << i32)
+		n := o | y
 		if atomic.CompareAndSwapUint32(&vec.buf[i/32], o, n) {
 			return true
 		}
@@ -49,10 +51,12 @@ func (vec *ConcurrentVector) Unset(i uint64) bool {
 	if len(vec.buf) <= int(i/32) {
 		return false
 	}
+	i32 := uint32(i % 32)
 	var j uint64
 	for j = 0; j < vec.lim; j++ {
 		o := atomic.LoadUint32(&vec.buf[i/32])
-		n := o &^ 1 << (i % 32)
+		y := uint32(1 << i32)
+		n := o &^ y
 		if atomic.CompareAndSwapUint32(&vec.buf[i/32], o, n) {
 			return true
 		}

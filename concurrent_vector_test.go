@@ -10,7 +10,7 @@ import (
 
 func TestConcurrentVector(t *testing.T) {
 	prepare := func(size uint) *ConcurrentVector {
-		vec, _ := NewConcurrentVector(10, 1)
+		vec, _ := NewConcurrentVector(10, 0)
 		vec.Set(3)
 		vec.Set(5)
 		vec.Set(7)
@@ -23,6 +23,13 @@ func TestConcurrentVector(t *testing.T) {
 			t.Fail()
 		}
 	})
+	t.Run("unset", func(t *testing.T) {
+		vec := prepare(10)
+		vec.Unset(5)
+		if vec.Get(5) != 0 {
+			t.Fail()
+		}
+	})
 	t.Run("get", func(t *testing.T) {
 		vec := prepare(10)
 		chk := map[int]uint8{3: 1, 5: 1, 7: 1, 9: 1}
@@ -30,13 +37,6 @@ func TestConcurrentVector(t *testing.T) {
 			if chk[i] != vec.Get(uint64(i)) {
 				t.Fail()
 			}
-		}
-	})
-	t.Run("unset", func(t *testing.T) {
-		vec := prepare(10)
-		vec.Unset(5)
-		if vec.Get(5) != 0 {
-			t.Fail()
 		}
 	})
 	t.Run("writer", func(t *testing.T) {
@@ -74,25 +74,25 @@ func TestConcurrentVector(t *testing.T) {
 func BenchmarkConcurrentVector(b *testing.B) {
 	b.Run("set", func(b *testing.B) {
 		b.ReportAllocs()
-		vec, _ := NewConcurrentVector(10, 1)
+		vec, _ := NewConcurrentVector(10, 0)
 		for i := 0; i < b.N; i++ {
 			vec.Set(9)
 		}
 	})
-	b.Run("get", func(b *testing.B) {
-		b.ReportAllocs()
-		vec, _ := NewConcurrentVector(10, 1)
-		vec.Set(5)
-		for i := 0; i < b.N; i++ {
-			vec.Get(5)
-		}
-	})
 	b.Run("unset", func(b *testing.B) {
 		b.ReportAllocs()
-		vec, _ := NewConcurrentVector(10, 1)
+		vec, _ := NewConcurrentVector(10, 0)
 		vec.Set(5)
 		for i := 0; i < b.N; i++ {
 			vec.Unset(5)
+		}
+	})
+	b.Run("get", func(b *testing.B) {
+		b.ReportAllocs()
+		vec, _ := NewConcurrentVector(10, 0)
+		vec.Set(5)
+		for i := 0; i < b.N; i++ {
+			vec.Get(5)
 		}
 	})
 	b.Run("parallel io", func(b *testing.B) {

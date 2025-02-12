@@ -20,6 +20,13 @@ func TestVector(t *testing.T) {
 			t.Fail()
 		}
 	})
+	t.Run("unset", func(t *testing.T) {
+		vec := prepare(10)
+		vec.Unset(5)
+		if vec.Get(5) != 0 {
+			t.Fail()
+		}
+	})
 	t.Run("get", func(t *testing.T) {
 		vec := prepare(10)
 		chk := map[int]uint8{3: 1, 5: 1, 7: 1, 9: 1}
@@ -27,13 +34,6 @@ func TestVector(t *testing.T) {
 			if chk[i] != vec.Get(uint64(i)) {
 				t.Fail()
 			}
-		}
-	})
-	t.Run("unset", func(t *testing.T) {
-		vec := prepare(10)
-		vec.Unset(5)
-		if vec.Get(5) != 0 {
-			t.Fail()
 		}
 	})
 	t.Run("writer", func(t *testing.T) {
@@ -76,20 +76,20 @@ func BenchmarkVector(b *testing.B) {
 			vec.Set(9)
 		}
 	})
-	b.Run("get", func(b *testing.B) {
-		b.ReportAllocs()
-		vec, _ := NewVector(10)
-		vec.Set(5)
-		for i := 0; i < b.N; i++ {
-			vec.Get(5)
-		}
-	})
 	b.Run("unset", func(b *testing.B) {
 		b.ReportAllocs()
 		vec, _ := NewVector(10)
 		vec.Set(5)
 		for i := 0; i < b.N; i++ {
 			vec.Unset(5)
+		}
+	})
+	b.Run("get", func(b *testing.B) {
+		b.ReportAllocs()
+		vec, _ := NewVector(10)
+		vec.Set(5)
+		for i := 0; i < b.N; i++ {
+			vec.Get(5)
 		}
 	})
 }
