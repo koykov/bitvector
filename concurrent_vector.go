@@ -3,6 +3,7 @@ package bitvector
 import (
 	"encoding/binary"
 	"io"
+	"math"
 	"sync/atomic"
 )
 
@@ -14,6 +15,7 @@ type ConcurrentVector struct {
 	buf []uint32
 	blk [blockSz]byte
 	lim uint64
+	c   uint64
 }
 
 // NewConcurrentVector make new concurrent bit array with given size. Param writeAttemptsLimit is the maximum number of
@@ -35,8 +37,9 @@ func (vec *ConcurrentVector) Set(i uint64) bool {
 	}
 	for j := uint64(0); j < vec.lim; j++ {
 		o := atomic.LoadUint32(&vec.buf[i/32])
-		n := o | 1<<i%32
+		n := o | 1<<(i%32)
 		if atomic.CompareAndSwapUint32(&vec.buf[i/32], o, n) {
+			atomic.AddUint64(&vec.c, 1)
 			return true
 		}
 	}
@@ -50,8 +53,9 @@ func (vec *ConcurrentVector) Unset(i uint64) bool {
 	}
 	for j := uint64(0); j < vec.lim; j++ {
 		o := atomic.LoadUint32(&vec.buf[i/32])
-		n := o &^ 1 << i % 32
+		n := o &^ 1 << (i % 32)
 		if atomic.CompareAndSwapUint32(&vec.buf[i/32], o, n) {
+			atomic.AddUint64(&vec.c, math.MaxUint64)
 			return true
 		}
 	}
@@ -64,6 +68,11 @@ func (vec *ConcurrentVector) Get(i uint64) uint8 {
 		return 0
 	}
 	return uint8((atomic.LoadUint32(&vec.buf[i/32]) & (1 << (i % 32))) >> (i % 32))
+}
+
+// Size returns number of items added to the vector.
+func (vec *ConcurrentVector) Size() uint64 {
+	return atomic.LoadUint64(&vec.c)
 }
 
 // Reset resets the whole bit array.
