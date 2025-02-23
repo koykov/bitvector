@@ -9,8 +9,8 @@ import (
 // Vector represents simple bit array implementation without race protection. It means you may do concurrent read, but
 // cannot do simultaneous read/write operations.
 type Vector struct {
-	buf []uint8
-	c   uint64
+	buf  []uint8
+	c, s uint64
 }
 
 // NewVector make new bit array with given size.
@@ -27,7 +27,7 @@ func (vec *Vector) Set(i uint64) bool {
 		return false
 	}
 	vec.buf[i/8] |= 1 << uint8(i%8)
-	vec.c++
+	vec.s++
 	return true
 }
 
@@ -37,7 +37,7 @@ func (vec *Vector) Unset(i uint64) bool {
 		return false
 	}
 	vec.buf[i/8] &^= 1 << uint8(i%8)
-	vec.c--
+	vec.s--
 	return true
 }
 
@@ -51,6 +51,11 @@ func (vec *Vector) Get(i uint64) uint8 {
 
 // Size returns number of items added to the vector.
 func (vec *Vector) Size() uint64 {
+	return vec.s
+}
+
+// Capacity returns total capacity of the vector.
+func (vec *Vector) Capacity() uint64 {
 	return vec.c
 }
 

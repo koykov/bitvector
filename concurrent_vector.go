@@ -12,10 +12,10 @@ const blockSz = 4096
 // ConcurrentVector represents concurrent bit array implementation with race protection. Simultaneous read/write
 // operations are possible.
 type ConcurrentVector struct {
-	buf []uint32
-	blk [blockSz]byte
-	lim uint64
-	c   uint64
+	buf  []uint32
+	blk  [blockSz]byte
+	lim  uint64
+	c, s uint64
 }
 
 // NewConcurrentVector make new concurrent bit array with given size. Param writeAttemptsLimit is the maximum number of
@@ -39,7 +39,7 @@ func (vec *ConcurrentVector) Set(i uint64) bool {
 		o := atomic.LoadUint32(&vec.buf[i/32])
 		n := o | 1<<(i%32)
 		if atomic.CompareAndSwapUint32(&vec.buf[i/32], o, n) {
-			atomic.AddUint64(&vec.c, 1)
+			atomic.AddUint64(&vec.s, 1)
 			return true
 		}
 	}
@@ -55,7 +55,7 @@ func (vec *ConcurrentVector) Unset(i uint64) bool {
 		o := atomic.LoadUint32(&vec.buf[i/32])
 		n := o &^ 1 << (i % 32)
 		if atomic.CompareAndSwapUint32(&vec.buf[i/32], o, n) {
-			atomic.AddUint64(&vec.c, math.MaxUint64)
+			atomic.AddUint64(&vec.s, math.MaxUint64)
 			return true
 		}
 	}
@@ -72,7 +72,12 @@ func (vec *ConcurrentVector) Get(i uint64) uint8 {
 
 // Size returns number of items added to the vector.
 func (vec *ConcurrentVector) Size() uint64 {
-	return atomic.LoadUint64(&vec.c)
+	return atomic.LoadUint64(&vec.s)
+}
+
+// Capacity returns total capacity of the vector.
+func (vec *ConcurrentVector) Capacity() uint64 {
+	return vec.c
 }
 
 // Reset resets the whole bit array.

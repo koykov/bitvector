@@ -12,6 +12,10 @@ type Interface interface {
 	Unset(uint64) bool
 	// Get reads bit value from given position.
 	Get(uint64) uint8
+	// Size returns number of items added to the vector.
+	Size() uint64
+	// Capacity returns total capacity of the vector.
+	Capacity() uint64
 	// Reset resets the whole bit array.
 	Reset()
 }
