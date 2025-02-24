@@ -18,7 +18,10 @@ func NewVector(size uint64) (*Vector, error) {
 	if size == 0 {
 		return nil, ErrZeroSize
 	}
-	return &Vector{buf: make([]uint8, size/8+1)}, nil
+	return &Vector{
+		buf: make([]uint8, size/8+1),
+		c:   size,
+	}, nil
 }
 
 // Set writes new bit at given position.

@@ -27,6 +27,7 @@ func NewConcurrentVector(size, writeAttemptsLimit uint64) (*ConcurrentVector, er
 	return &ConcurrentVector{
 		buf: make([]uint32, size/32+1),
 		lim: writeAttemptsLimit + 1,
+		c:   size,
 	}, nil
 }
 
