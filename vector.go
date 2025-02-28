@@ -66,7 +66,7 @@ func (vec *Vector) Size() uint64 {
 
 // Capacity returns total capacity of the vector.
 func (vec *Vector) Capacity() uint64 {
-	return vec.c
+	return uint64(len(vec.buf)) * 8
 }
 
 // Reset resets the whole bit array.
@@ -105,8 +105,8 @@ func (vec *Vector) ReadFrom(r io.Reader) (n int64, err error) {
 
 	m, err = r.Read(vec.buf)
 	n += int64(m)
-	if err != nil {
-		return n, err
+	if err == io.EOF {
+		err = nil
 	}
 	return n, err
 }

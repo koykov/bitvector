@@ -83,7 +83,7 @@ func (vec *ConcurrentVector) Size() uint64 {
 
 // Capacity returns total capacity of the vector.
 func (vec *ConcurrentVector) Capacity() uint64 {
-	return vec.c
+	return uint64(len(vec.buf)) * 32
 }
 
 // Reset resets the whole bit array.
