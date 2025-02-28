@@ -49,13 +49,13 @@ func TestVector(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if n != 2 {
+		if n != 34 {
 			t.Fail()
 		}
 	})
 	t.Run("reader", func(t *testing.T) {
 		vec, _ := NewVector(10)
-		f, err := os.Open("testdata/vector.bin")
+		f, err := os.OpenFile("testdata/vector.bin", os.O_RDONLY, 0644)
 		if err != nil {
 			t.Fatal(err)
 		}

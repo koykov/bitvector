@@ -49,13 +49,13 @@ func TestConcurrentVector(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if n != 4 {
+		if n != 44 {
 			t.Fail()
 		}
 	})
 	t.Run("reader", func(t *testing.T) {
 		vec, _ := NewConcurrentVector(10, 0)
-		f, err := os.Open("testdata/concurrent_vector.bin")
+		f, err := os.OpenFile("testdata/concurrent_vector.bin", os.O_RDONLY, 0644)
 		if err != nil {
 			t.Fatal(err)
 		}

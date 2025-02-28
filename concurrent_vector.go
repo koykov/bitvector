@@ -7,7 +7,12 @@ import (
 	"sync/atomic"
 )
 
-const blockSz = 4096
+const (
+	cnVectorDumpSignature = 0xe1aa38d7f1fe3cd9
+	cnVectorDumpVersion   = 1.0
+
+	blockSz = 4096
+)
 
 // ConcurrentVector represents concurrent bit array implementation with race protection. Simultaneous read/write
 // operations are possible.
@@ -93,48 +98,86 @@ func (vec *ConcurrentVector) Reset() {
 	}
 }
 
-func (vec *ConcurrentVector) ReadFrom(r io.Reader) (int64, error) {
-	var n int
+func (vec *ConcurrentVector) ReadFrom(r io.Reader) (n int64, err error) {
+	var (
+		buf [40]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+
+	sign, ver, c, s, lim := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
+		binary.LittleEndian.Uint64(buf[16:24]), binary.LittleEndian.Uint64(buf[24:32]),
+		binary.LittleEndian.Uint64(buf[32:40])
+
+	if sign != cnVectorDumpSignature {
+		return n, ErrInvalidSignature
+	}
+	if ver != math.Float64bits(cnVectorDumpVersion) {
+		return n, ErrVersionMismatch
+	}
+	vec.c, vec.s, vec.lim = c, s, lim
+
+	if cp := c/32 + 1; uint64(len(vec.buf)) < cp {
+		vec.buf = make([]uint32, cp)
+	}
+
 	for {
-		n1, err := r.Read(vec.blk[:])
+		m, err = r.Read(vec.blk[:])
+		n += int64(m)
 		if err != nil && err != io.EOF {
-			return int64(n), err
+			return n, err
 		}
-		n += n1
-		for i := 0; i < n1; i += 4 {
+		for i := 0; i < m; i += 4 {
 			v := binary.LittleEndian.Uint32(vec.blk[i:])
 			atomic.StoreUint32(&vec.buf[i/4], v)
 		}
 		if err == io.EOF {
+			err = nil
 			break
 		}
 	}
-	return int64(n), nil
+	return
 }
 
-func (vec *ConcurrentVector) WriteTo(w io.Writer) (int64, error) {
-	var off, n int
+func (vec *ConcurrentVector) WriteTo(w io.Writer) (n int64, err error) {
+	var (
+		buf [40]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], cnVectorDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(cnVectorDumpVersion))
+	binary.LittleEndian.PutUint64(buf[16:24], vec.c)
+	binary.LittleEndian.PutUint64(buf[24:32], vec.s)
+	binary.LittleEndian.PutUint64(buf[32:40], vec.lim)
+	if m, err = w.Write(buf[:]); err != nil {
+		return int64(m), err
+	}
+	n += int64(m)
+
+	var off int
 	for i := 0; i < len(vec.buf); i++ {
 		v := atomic.LoadUint32(&vec.buf[i])
 		binary.LittleEndian.PutUint32(vec.blk[off:], v)
 		if off += 4; off == blockSz {
-			n1, err := w.Write(vec.blk[:off])
-			n += n1
+			m, err = w.Write(vec.blk[:off])
+			n += int64(m)
 			if err != nil {
-				return int64(n), err
+				return
 			}
-			if n1 < blockSz {
-				return int64(n), io.ErrShortWrite
+			if m < blockSz {
+				err = io.ErrShortWrite
+				return
 			}
 			off = 0
 		}
 	}
 	if off > 0 {
-		n1, err := w.Write(vec.blk[:off])
-		n += n1
-		if err != nil {
-			return int64(n), err
-		}
+		m, err = w.Write(vec.blk[:off])
+		n += int64(m)
 	}
-	return int64(n), nil
+	return
 }

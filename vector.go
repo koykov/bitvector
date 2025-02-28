@@ -1,9 +1,16 @@
 package bitvector
 
 import (
+	"encoding/binary"
 	"io"
+	"math"
 
 	"github.com/koykov/openrt"
+)
+
+const (
+	vectorDumpSignature = 0x65a5cc221b100738
+	vectorDumpVersion   = 1.0
 )
 
 // Vector represents simple bit array implementation without race protection. It means you may do concurrent read, but
@@ -70,12 +77,56 @@ func (vec *Vector) Reset() {
 	openrt.Memclr(vec.buf)
 }
 
-func (vec *Vector) ReadFrom(r io.Reader) (int64, error) {
-	n, err := r.Read(vec.buf)
-	return int64(n), err
+func (vec *Vector) ReadFrom(r io.Reader) (n int64, err error) {
+	var (
+		buf [32]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+
+	sign, ver, c, s := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
+		binary.LittleEndian.Uint64(buf[16:24]), binary.LittleEndian.Uint64(buf[24:32])
+
+	if sign != vectorDumpSignature {
+		return n, ErrInvalidSignature
+	}
+	if ver != math.Float64bits(vectorDumpVersion) {
+		return n, ErrVersionMismatch
+	}
+	vec.c, vec.s = c, s
+
+	if uint64(len(vec.buf)) < c/8+1 {
+		vec.buf = make([]uint8, c/8+1)
+	}
+
+	m, err = r.Read(vec.buf)
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+	return n, err
 }
 
-func (vec *Vector) WriteTo(w io.Writer) (int64, error) {
-	n, err := w.Write(vec.buf)
-	return int64(n), err
+func (vec *Vector) WriteTo(w io.Writer) (n int64, err error) {
+	var (
+		buf [32]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], vectorDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(vectorDumpVersion))
+	binary.LittleEndian.PutUint64(buf[16:24], vec.c)
+	binary.LittleEndian.PutUint64(buf[24:32], vec.s)
+	m, err = w.Write(buf[:])
+	n += int64(m)
+	if err != nil {
+		return int64(m), err
+	}
+
+	m, err = w.Write(vec.buf)
+	n += int64(m)
+	return n, err
 }
