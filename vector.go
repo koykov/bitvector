@@ -108,7 +108,7 @@ func (vec *Vector) ReadFrom(r io.Reader) (n int64, err error) {
 	if err == io.EOF {
 		err = nil
 	}
-	return n, err
+	return
 }
 
 func (vec *Vector) WriteTo(w io.Writer) (n int64, err error) {
@@ -128,5 +128,5 @@ func (vec *Vector) WriteTo(w io.Writer) (n int64, err error) {
 
 	m, err = w.Write(vec.buf)
 	n += int64(m)
-	return n, err
+	return
 }
