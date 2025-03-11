@@ -119,7 +119,8 @@ func (vec *ConcurrentVector) ReadFrom(r io.Reader) (n int64, err error) {
 	if ver != math.Float64bits(cnVectorDumpVersion) {
 		return n, ErrVersionMismatch
 	}
-	vec.c, vec.s, vec.lim = c, s, lim
+	vec.c, vec.lim = c, lim
+	atomic.StoreUint64(&vec.s, s)
 
 	if cp := c/32 + 1; uint64(len(vec.buf)) < cp {
 		vec.buf = make([]uint32, cp)
@@ -151,7 +152,7 @@ func (vec *ConcurrentVector) WriteTo(w io.Writer) (n int64, err error) {
 	binary.LittleEndian.PutUint64(buf[0:8], cnVectorDumpSignature)
 	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(cnVectorDumpVersion))
 	binary.LittleEndian.PutUint64(buf[16:24], vec.c)
-	binary.LittleEndian.PutUint64(buf[24:32], vec.s)
+	binary.LittleEndian.PutUint64(buf[24:32], atomic.LoadUint64(&vec.s))
 	binary.LittleEndian.PutUint64(buf[32:40], vec.lim)
 	if m, err = w.Write(buf[:]); err != nil {
 		return int64(m), err
