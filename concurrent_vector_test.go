@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"os"
+	"strconv"
 	"sync/atomic"
 	"testing"
 )
@@ -37,6 +38,12 @@ func TestConcurrentVector(t *testing.T) {
 			if chk[i] != vec.Get(uint64(i)) {
 				t.Fail()
 			}
+		}
+	})
+	t.Run("ones count", func(t *testing.T) {
+		vec := prepare(10)
+		if vec.OnesCount() != 4 {
+			t.Fail()
 		}
 	})
 	t.Run("writer", func(t *testing.T) {
@@ -122,5 +129,20 @@ func BenchmarkConcurrentVector(b *testing.B) {
 				vec.Get(atomic.AddUint64(&i, 1))
 			}
 		})
+	})
+	b.Run("ones count", func(b *testing.B) {
+		const base = 1000
+		pow := func(x, y int) int {
+			return int(math.Pow(float64(x), float64(y)))
+		}
+		for i := 0; i < 7; i++ {
+			b.Run(strconv.Itoa(base*pow(10, i)), func(b *testing.B) {
+				b.ReportAllocs()
+				vec, _ := NewConcurrentVector(uint64(base*pow(10, i)), 0)
+				for j := 0; j < b.N; j++ {
+					vec.OnesCount()
+				}
+			})
+		}
 	})
 }

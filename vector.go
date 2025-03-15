@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io"
 	"math"
+	"math/bits"
 
 	"github.com/koykov/openrt"
 )
@@ -67,6 +68,25 @@ func (vec *Vector) Size() uint64 {
 // Capacity returns total capacity of the vector.
 func (vec *Vector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 8
+}
+
+// OnesCount returns number of ones in the vector.
+func (vec *Vector) OnesCount() (r uint64) {
+	buf := vec.buf
+	n := len(buf)
+	if n == 0 {
+		return
+	}
+	_ = buf[n-1]
+	for len(buf) > 8 {
+		u64 := binary.LittleEndian.Uint64(buf[:8])
+		r += uint64(bits.OnesCount64(u64))
+		buf = buf[8:]
+	}
+	for i := 0; i < len(buf); i++ {
+		r += uint64(bits.OnesCount8(buf[i]))
+	}
+	return
 }
 
 // Reset resets the whole bit array.

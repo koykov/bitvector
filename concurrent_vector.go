@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io"
 	"math"
+	"math/bits"
 	"sync/atomic"
 )
 
@@ -84,6 +85,20 @@ func (vec *ConcurrentVector) Size() uint64 {
 // Capacity returns total capacity of the vector.
 func (vec *ConcurrentVector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 32
+}
+
+// OnesCount returns number of ones in the vector.
+func (vec *ConcurrentVector) OnesCount() (r uint64) {
+	n := len(vec.buf)
+	if n == 0 {
+		return
+	}
+	_ = vec.buf[n-1]
+	for i := 0; i < n; i++ {
+		v := atomic.LoadUint32(&vec.buf[i])
+		r += uint64(bits.OnesCount32(v))
+	}
+	return
 }
 
 // Reset resets the whole bit array.
