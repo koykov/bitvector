@@ -136,9 +136,11 @@ func BenchmarkVector(b *testing.B) {
 			return int(math.Pow(float64(x), float64(y)))
 		}
 		for i := 0; i < 7; i++ {
-			b.Run(strconv.Itoa(base*pow(10, i)), func(b *testing.B) {
+			sz := base * pow(10, i)
+			b.Run(strconv.Itoa(sz), func(b *testing.B) {
 				b.ReportAllocs()
-				vec, _ := NewVector(uint64(base * pow(10, i)))
+				b.SetBytes(int64(sz))
+				vec, _ := NewVector(uint64(sz))
 				for j := 0; j < b.N; j++ {
 					vec.OnesCount()
 				}
