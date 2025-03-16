@@ -141,15 +141,15 @@ func (vec *ConcurrentVector) ReadFrom(r io.Reader) (n int64, err error) {
 		vec.buf = make([]uint32, cp)
 	}
 
-	for {
+	for i := 0; ; i += blockSz {
 		m, err = r.Read(vec.blk[:])
 		n += int64(m)
 		if err != nil && err != io.EOF {
 			return n, err
 		}
-		for i := 0; i < m; i += 4 {
-			v := binary.LittleEndian.Uint32(vec.blk[i:])
-			atomic.StoreUint32(&vec.buf[i/4], v)
+		for j := 0; j < m; j += 4 {
+			v := binary.LittleEndian.Uint32(vec.blk[j:])
+			atomic.StoreUint32(&vec.buf[(i+j)/4], v)
 		}
 		if err == io.EOF {
 			err = nil
