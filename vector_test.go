@@ -10,8 +10,8 @@ import (
 )
 
 func TestVector(t *testing.T) {
-	prepare := func(size uint) *Vector {
-		vec, _ := NewVector(10)
+	prepare := func(size uint64) *Vector {
+		vec, _ := NewVector(size)
 		vec.Set(3)
 		vec.Set(5)
 		vec.Set(7)
@@ -41,7 +41,7 @@ func TestVector(t *testing.T) {
 		}
 	})
 	t.Run("ones count", func(t *testing.T) {
-		vec := prepare(10)
+		vec := prepare(1024)
 		if vec.OnesCount() != 4 {
 			t.Fail()
 		}
