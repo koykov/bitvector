@@ -5,8 +5,10 @@ import (
 	"io"
 	"math"
 	"math/bits"
+	"unsafe"
 
 	"github.com/koykov/openrt"
+	"github.com/koykov/simd/popcnt64"
 )
 
 const (
@@ -78,10 +80,16 @@ func (vec *Vector) OnesCount() (r uint64) {
 		return
 	}
 	_ = buf[n-1]
-	for len(buf) > 8 {
-		u64 := binary.LittleEndian.Uint64(buf[:8])
-		r += uint64(bits.OnesCount64(u64))
-		buf = buf[8:]
+	if n > 8 {
+		type sh struct {
+			p    uintptr
+			l, c int
+		}
+		n8 := n / 8
+		h := sh{p: uintptr(unsafe.Pointer(&buf[0])), l: n8, c: n8}
+		buf64 := *(*[]uint64)(unsafe.Pointer(&h))
+		r += popcnt64.Popcnt64(buf64)
+		buf = buf[n8*8:]
 	}
 	for i := 0; i < len(buf); i++ {
 		r += uint64(bits.OnesCount8(buf[i]))
