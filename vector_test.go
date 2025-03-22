@@ -40,9 +40,9 @@ func TestVector(t *testing.T) {
 			}
 		}
 	})
-	t.Run("ones count", func(t *testing.T) {
+	t.Run("popcnt", func(t *testing.T) {
 		vec := prepare(1024)
-		if vec.OnesCount() != 4 {
+		if vec.Popcnt() != 4 {
 			t.Fail()
 		}
 	})
@@ -130,7 +130,7 @@ func BenchmarkVector(b *testing.B) {
 			}
 		})
 	})
-	b.Run("ones count", func(b *testing.B) {
+	b.Run("popcnt", func(b *testing.B) {
 		const base = 1000
 		pow := func(x, y int) int {
 			return int(math.Pow(float64(x), float64(y)))
@@ -142,7 +142,7 @@ func BenchmarkVector(b *testing.B) {
 				b.SetBytes(int64(sz))
 				vec, _ := NewVector(uint64(sz))
 				for j := 0; j < b.N; j++ {
-					vec.OnesCount()
+					vec.Popcnt()
 				}
 			})
 		}

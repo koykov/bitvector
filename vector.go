@@ -72,8 +72,8 @@ func (vec *Vector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 8
 }
 
-// OnesCount returns number of ones in the vector.
-func (vec *Vector) OnesCount() (r uint64) {
+// Popcnt returns population count (number of set bits) in the vector.
+func (vec *Vector) Popcnt() (r uint64) {
 	buf := vec.buf
 	n := len(buf)
 	if n == 0 {
@@ -81,6 +81,7 @@ func (vec *Vector) OnesCount() (r uint64) {
 	}
 	_ = buf[n-1]
 	if n > 8 {
+		// Interpret bytes slice as uint64 slice.
 		type sh struct {
 			p    uintptr
 			l, c int
@@ -88,7 +89,9 @@ func (vec *Vector) OnesCount() (r uint64) {
 		n8 := n / 8
 		h := sh{p: uintptr(unsafe.Pointer(&buf[0])), l: n8, c: n8}
 		buf64 := *(*[]uint64)(unsafe.Pointer(&h))
+		// Apply vectorised population count over uint64 slice.
 		r += popcnt64.Count(buf64)
+		// Rest of bytes will process below.
 		buf = buf[n8*8:]
 	}
 	for i := 0; i < len(buf); i++ {

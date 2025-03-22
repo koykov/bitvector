@@ -87,8 +87,8 @@ func (vec *ConcurrentVector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 32
 }
 
-// OnesCount returns number of ones in the vector.
-func (vec *ConcurrentVector) OnesCount() (r uint64) {
+// Popcnt returns population count (number of set bits) in the vector.
+func (vec *ConcurrentVector) Popcnt() (r uint64) {
 	n := len(vec.buf)
 	if n == 0 {
 		return

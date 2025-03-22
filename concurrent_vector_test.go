@@ -40,9 +40,9 @@ func TestConcurrentVector(t *testing.T) {
 			}
 		}
 	})
-	t.Run("ones count", func(t *testing.T) {
+	t.Run("popcnt", func(t *testing.T) {
 		vec := prepare(10)
-		if vec.OnesCount() != 4 {
+		if vec.Popcnt() != 4 {
 			t.Fail()
 		}
 	})
@@ -130,7 +130,7 @@ func BenchmarkConcurrentVector(b *testing.B) {
 			}
 		})
 	})
-	b.Run("ones count", func(b *testing.B) {
+	b.Run("popcnt", func(b *testing.B) {
 		const base = 1000
 		pow := func(x, y int) int {
 			return int(math.Pow(float64(x), float64(y)))
@@ -140,7 +140,7 @@ func BenchmarkConcurrentVector(b *testing.B) {
 				b.ReportAllocs()
 				vec, _ := NewConcurrentVector(uint64(base*pow(10, i)), 0)
 				for j := 0; j < b.N; j++ {
-					vec.OnesCount()
+					vec.Popcnt()
 				}
 			})
 		}

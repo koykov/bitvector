@@ -16,8 +16,8 @@ type Interface interface {
 	Size() uint64
 	// Capacity returns total capacity of the vector.
 	Capacity() uint64
-	// OnesCount returns number of ones in the vector.
-	OnesCount() uint64
+	// Popcnt returns population count (number of set bits) in the vector.
+	Popcnt() uint64
 	// Reset resets the whole bit array.
 	Reset()
 }
