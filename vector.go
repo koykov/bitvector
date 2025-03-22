@@ -88,7 +88,7 @@ func (vec *Vector) OnesCount() (r uint64) {
 		n8 := n / 8
 		h := sh{p: uintptr(unsafe.Pointer(&buf[0])), l: n8, c: n8}
 		buf64 := *(*[]uint64)(unsafe.Pointer(&h))
-		r += popcnt64.Popcnt64(buf64)
+		r += popcnt64.Count(buf64)
 		buf = buf[n8*8:]
 	}
 	for i := 0; i < len(buf); i++ {
