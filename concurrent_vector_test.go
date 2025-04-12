@@ -79,6 +79,10 @@ func TestConcurrentVector(t *testing.T) {
 }
 
 func BenchmarkConcurrentVector(b *testing.B) {
+	pow := func(x, y int) int {
+		return int(math.Pow(float64(x), float64(y)))
+	}
+
 	b.Run("set", func(b *testing.B) {
 		b.ReportAllocs()
 		vec, _ := NewConcurrentVector(10, 0)
@@ -100,6 +104,20 @@ func BenchmarkConcurrentVector(b *testing.B) {
 		vec.Set(5)
 		for i := 0; i < b.N; i++ {
 			vec.Get(5)
+		}
+	})
+	b.Run("reset", func(b *testing.B) {
+		const base = 1000
+		for i := 0; i < 7; i++ {
+			sz := base * pow(10, i)
+			b.Run(strconv.Itoa(sz), func(b *testing.B) {
+				b.ReportAllocs()
+				b.SetBytes(int64(sz))
+				vec, _ := NewConcurrentVector(uint64(sz), 0)
+				for j := 0; j < b.N; j++ {
+					vec.Reset()
+				}
+			})
 		}
 	})
 	b.Run("parallel io", func(b *testing.B) {
@@ -132,9 +150,6 @@ func BenchmarkConcurrentVector(b *testing.B) {
 	})
 	b.Run("popcnt", func(b *testing.B) {
 		const base = 1000
-		pow := func(x, y int) int {
-			return int(math.Pow(float64(x), float64(y)))
-		}
 		for i := 0; i < 7; i++ {
 			b.Run(strconv.Itoa(base*pow(10, i)), func(b *testing.B) {
 				b.ReportAllocs()

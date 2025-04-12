@@ -7,7 +7,7 @@ import (
 	"math/bits"
 	"unsafe"
 
-	"github.com/koykov/openrt"
+	"github.com/koykov/simd/memclr64"
 	"github.com/koykov/simd/popcnt64"
 )
 
@@ -105,7 +105,7 @@ func (vec *Vector) Reset() {
 	if len(vec.buf) == 0 {
 		return
 	}
-	openrt.Memclr(vec.buf)
+	memclr64.ClearBytes(vec.buf)
 }
 
 func (vec *Vector) ReadFrom(r io.Reader) (n int64, err error) {
