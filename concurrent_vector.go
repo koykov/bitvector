@@ -53,6 +53,7 @@ func (vec *ConcurrentVector) Set(i uint64) bool {
 	return false
 }
 
+// Xor applies xor at given position.
 func (vec *ConcurrentVector) Xor(i uint64) bool {
 	if len(vec.buf) <= int(i/32) {
 		return false
@@ -111,6 +112,32 @@ func (vec *ConcurrentVector) Popcnt() (r uint64) {
 	_ = vec.buf[n-1]
 	for i := 0; i < n; i++ {
 		v := atomic.LoadUint32(&vec.buf[i])
+		r += uint64(bits.OnesCount32(v))
+	}
+	return
+}
+
+func (vec *ConcurrentVector) Difference(other Interface) (r uint64, err error) {
+	var ovec *ConcurrentVector
+	switch x := any(other).(type) {
+	case *ConcurrentVector:
+		ovec = x
+	default:
+		err = ErrWrongType
+		return
+	}
+	if vec.c != ovec.c {
+		err = ErrNotEqualSize
+		return
+	}
+	n := len(vec.buf)
+	if n == 0 {
+		n = len(ovec.buf)
+	}
+	_ = vec.buf[n-1]
+	_ = ovec.buf[n-1]
+	for i := 0; i < n; i++ {
+		v := atomic.LoadUint32(&vec.buf[i]) ^ atomic.LoadUint32(&ovec.buf[i])
 		r += uint64(bits.OnesCount32(v))
 	}
 	return

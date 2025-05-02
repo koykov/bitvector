@@ -20,6 +20,8 @@ type Interface interface {
 	Capacity() uint64
 	// Popcnt returns population count (number of set bits) in the vector.
 	Popcnt() uint64
+	// Difference returns count of different bits between two vectors.
+	Difference(p Interface) (uint64, error)
 	// Reset resets the whole bit array.
 	Reset()
 }

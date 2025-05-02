@@ -44,6 +44,7 @@ func (vec *Vector) Set(i uint64) bool {
 	return true
 }
 
+// Xor applies xor at given position.
 func (vec *Vector) Xor(i uint64) bool {
 	if len(vec.buf) <= int(i/8) {
 		return false
@@ -104,6 +105,28 @@ func (vec *Vector) Popcnt() (r uint64) {
 	}
 	for i := 0; i < len(buf); i++ {
 		r += uint64(bits.OnesCount8(buf[i]))
+	}
+	return
+}
+
+func (vec *Vector) Difference(other Interface) (r uint64, err error) {
+	var ovec *Vector
+	switch x := any(other).(type) {
+	case *Vector:
+		ovec = x
+	default:
+		err = ErrWrongType
+		return
+	}
+	if vec.c != ovec.c {
+		err = ErrNotEqualSize
+		return
+	}
+	buf := vec.buf
+	obuf := ovec.buf
+	// todo use SIMD
+	for i := 0; i < len(buf); i++ {
+		r += uint64(bits.OnesCount8(buf[i] ^ obuf[i]))
 	}
 	return
 }
