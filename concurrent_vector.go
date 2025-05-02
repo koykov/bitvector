@@ -53,6 +53,21 @@ func (vec *ConcurrentVector) Set(i uint64) bool {
 	return false
 }
 
+func (vec *ConcurrentVector) Xor(i uint64) bool {
+	if len(vec.buf) <= int(i/32) {
+		return false
+	}
+	for j := uint64(0); j < vec.lim; j++ {
+		o := atomic.LoadUint32(&vec.buf[i/32])
+		n := o ^ 1<<(i%32)
+		if atomic.CompareAndSwapUint32(&vec.buf[i/32], o, n) {
+			atomic.AddUint64(&vec.s, 1)
+			return true
+		}
+	}
+	return false
+}
+
 // Unset clears bit at given position.
 func (vec *ConcurrentVector) Unset(i uint64) bool {
 	if len(vec.buf) <= int(i/32) {

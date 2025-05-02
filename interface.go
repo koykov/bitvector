@@ -8,6 +8,8 @@ type Interface interface {
 	io.WriterTo
 	// Set writes new bit at given position.
 	Set(uint64) bool
+	// Xor applies xor at given position.
+	Xor(uint64) bool
 	// Unset clears bit at given position.
 	Unset(uint64) bool
 	// Get reads bit value from given position.

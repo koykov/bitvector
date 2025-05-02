@@ -44,6 +44,14 @@ func (vec *Vector) Set(i uint64) bool {
 	return true
 }
 
+func (vec *Vector) Xor(i uint64) bool {
+	if len(vec.buf) <= int(i/8) {
+		return false
+	}
+	vec.buf[i/8] ^= 1 << uint8(i%8)
+	return true
+}
+
 // Unset clears bit at given position.
 func (vec *Vector) Unset(i uint64) bool {
 	if len(vec.buf) <= int(i/8) {
