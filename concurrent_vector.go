@@ -143,6 +143,19 @@ func (vec *ConcurrentVector) Difference(other Interface) (r uint64, err error) {
 	return
 }
 
+func (vec *ConcurrentVector) Clone() Interface {
+	clone := &ConcurrentVector{
+		buf: make([]uint32, len(vec.buf)),
+		c:   vec.c,
+		s:   atomic.LoadUint64(&vec.s),
+		lim: vec.lim,
+	}
+	for i := 0; i < len(vec.buf); i++ {
+		atomic.StoreUint32(&clone.buf[i], atomic.LoadUint32(&vec.buf[i]))
+	}
+	return clone
+}
+
 // Reset resets the whole bit array.
 func (vec *ConcurrentVector) Reset() {
 	n := len(vec.buf)

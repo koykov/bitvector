@@ -7,6 +7,7 @@ import (
 	"math/bits"
 	"unsafe"
 
+	"github.com/koykov/simd/hamming64"
 	"github.com/koykov/simd/memclr64"
 	"github.com/koykov/simd/popcnt64"
 )
@@ -124,11 +125,19 @@ func (vec *Vector) Difference(other Interface) (r uint64, err error) {
 	}
 	buf := vec.buf
 	obuf := ovec.buf
-	// todo use SIMD
-	for i := 0; i < len(buf); i++ {
-		r += uint64(bits.OnesCount8(buf[i] ^ obuf[i]))
-	}
+	diff := hamming64.DistanceBytes(buf, obuf)
+	r = uint64(diff)
 	return
+}
+
+func (vec *Vector) Clone() Interface {
+	clone := &Vector{
+		buf: make([]uint8, len(vec.buf)),
+		c:   vec.c,
+		s:   vec.s,
+	}
+	copy(clone.buf, vec.buf)
+	return clone
 }
 
 // Reset resets the whole bit array.

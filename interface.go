@@ -22,6 +22,8 @@ type Interface interface {
 	Popcnt() uint64
 	// Difference returns count of different bits between two vectors.
 	Difference(p Interface) (uint64, error)
+	// Clone returns a copy of the bit array.
+	Clone() Interface
 	// Reset resets the whole bit array.
 	Reset()
 }
