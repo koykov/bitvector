@@ -10,13 +10,13 @@ import (
 )
 
 func TestConcurrentVector(t *testing.T) {
-	prepare := func(size uint) *ConcurrentVector {
+	prepare := func(size uint) *concurrentVector {
 		vec, _ := NewConcurrentVector(10, 0)
 		vec.Set(3)
 		vec.Set(5)
 		vec.Set(7)
 		vec.Set(9)
-		return vec
+		return any(vec).(*concurrentVector)
 	}
 	t.Run("set", func(t *testing.T) {
 		vec := prepare(10)
@@ -128,7 +128,7 @@ func BenchmarkConcurrentVector(b *testing.B) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go func(ctx context.Context, vec *ConcurrentVector) {
+		go func(ctx context.Context, vec Interface) {
 			for i := uint64(0); ; i++ {
 				select {
 				case <-ctx.Done():

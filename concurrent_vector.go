@@ -15,9 +15,9 @@ const (
 	blockSz = 4096
 )
 
-// ConcurrentVector represents concurrent bit array implementation with race protection. Simultaneous read/write
+// concurrentVector represents concurrent bit array implementation with race protection. Simultaneous read/write
 // operations are possible.
-type ConcurrentVector struct {
+type concurrentVector struct {
 	buf  []uint32
 	blk  [blockSz]byte
 	lim  uint64
@@ -26,11 +26,11 @@ type ConcurrentVector struct {
 
 // NewConcurrentVector make new concurrent bit array with given size. Param writeAttemptsLimit is the maximum number of
 // attempts of atomic writes the bit value.
-func NewConcurrentVector(size, writeAttemptsLimit uint64) (*ConcurrentVector, error) {
+func NewConcurrentVector(size, writeAttemptsLimit uint64) (Interface, error) {
 	if size == 0 {
 		return nil, ErrZeroSize
 	}
-	return &ConcurrentVector{
+	return &concurrentVector{
 		buf: make([]uint32, size/32+1),
 		lim: writeAttemptsLimit + 1,
 		c:   size,
@@ -38,7 +38,7 @@ func NewConcurrentVector(size, writeAttemptsLimit uint64) (*ConcurrentVector, er
 }
 
 // Set writes new bit at given position.
-func (vec *ConcurrentVector) Set(i uint64) bool {
+func (vec *concurrentVector) Set(i uint64) bool {
 	if len(vec.buf) <= int(i/32) {
 		return false
 	}
@@ -54,7 +54,7 @@ func (vec *ConcurrentVector) Set(i uint64) bool {
 }
 
 // Xor applies xor at given position.
-func (vec *ConcurrentVector) Xor(i uint64) bool {
+func (vec *concurrentVector) Xor(i uint64) bool {
 	if len(vec.buf) <= int(i/32) {
 		return false
 	}
@@ -70,7 +70,7 @@ func (vec *ConcurrentVector) Xor(i uint64) bool {
 }
 
 // Unset clears bit at given position.
-func (vec *ConcurrentVector) Unset(i uint64) bool {
+func (vec *concurrentVector) Unset(i uint64) bool {
 	if len(vec.buf) <= int(i/32) {
 		return false
 	}
@@ -86,7 +86,7 @@ func (vec *ConcurrentVector) Unset(i uint64) bool {
 }
 
 // Get returns bit value from given position.
-func (vec *ConcurrentVector) Get(i uint64) uint8 {
+func (vec *concurrentVector) Get(i uint64) uint8 {
 	if len(vec.buf) <= int(i/32) {
 		return 0
 	}
@@ -94,17 +94,17 @@ func (vec *ConcurrentVector) Get(i uint64) uint8 {
 }
 
 // Size returns number of items added to the vector.
-func (vec *ConcurrentVector) Size() uint64 {
+func (vec *concurrentVector) Size() uint64 {
 	return atomic.LoadUint64(&vec.s)
 }
 
 // Capacity returns total capacity of the vector.
-func (vec *ConcurrentVector) Capacity() uint64 {
+func (vec *concurrentVector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 32
 }
 
 // Popcnt returns population count (number of set bits) in the vector.
-func (vec *ConcurrentVector) Popcnt() (r uint64) {
+func (vec *concurrentVector) Popcnt() (r uint64) {
 	n := len(vec.buf)
 	if n == 0 {
 		return
@@ -117,10 +117,10 @@ func (vec *ConcurrentVector) Popcnt() (r uint64) {
 	return
 }
 
-func (vec *ConcurrentVector) Difference(other Interface) (r uint64, err error) {
-	var ovec *ConcurrentVector
+func (vec *concurrentVector) Difference(other Interface) (r uint64, err error) {
+	var ovec *concurrentVector
 	switch x := any(other).(type) {
-	case *ConcurrentVector:
+	case *concurrentVector:
 		ovec = x
 	default:
 		err = ErrWrongType
@@ -143,8 +143,8 @@ func (vec *ConcurrentVector) Difference(other Interface) (r uint64, err error) {
 	return
 }
 
-func (vec *ConcurrentVector) Clone() Interface {
-	clone := &ConcurrentVector{
+func (vec *concurrentVector) Clone() Interface {
+	clone := &concurrentVector{
 		buf: make([]uint32, len(vec.buf)),
 		c:   vec.c,
 		s:   atomic.LoadUint64(&vec.s),
@@ -157,7 +157,7 @@ func (vec *ConcurrentVector) Clone() Interface {
 }
 
 // Reset resets the whole bit array.
-func (vec *ConcurrentVector) Reset() {
+func (vec *concurrentVector) Reset() {
 	n := len(vec.buf)
 	if n == 0 {
 		return
@@ -168,7 +168,7 @@ func (vec *ConcurrentVector) Reset() {
 	}
 }
 
-func (vec *ConcurrentVector) ReadFrom(r io.Reader) (n int64, err error) {
+func (vec *concurrentVector) ReadFrom(r io.Reader) (n int64, err error) {
 	var (
 		buf [40]byte
 		m   int
@@ -214,7 +214,7 @@ func (vec *ConcurrentVector) ReadFrom(r io.Reader) (n int64, err error) {
 	return
 }
 
-func (vec *ConcurrentVector) WriteTo(w io.Writer) (n int64, err error) {
+func (vec *concurrentVector) WriteTo(w io.Writer) (n int64, err error) {
 	var (
 		buf [40]byte
 		m   int

@@ -10,13 +10,13 @@ import (
 )
 
 func TestVector(t *testing.T) {
-	prepare := func(size uint64) *Vector {
+	prepare := func(size uint64) *vector {
 		vec, _ := NewVector(size)
 		vec.Set(3)
 		vec.Set(5)
 		vec.Set(7)
 		vec.Set(9)
-		return vec
+		return any(vec).(*vector)
 	}
 	t.Run("set", func(t *testing.T) {
 		vec := prepare(10)
@@ -136,7 +136,7 @@ func BenchmarkVector(b *testing.B) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go func(ctx context.Context, vec *Vector) {
+		go func(ctx context.Context, vec Interface) {
 			for i := uint64(0); ; i++ {
 				select {
 				case <-ctx.Done():

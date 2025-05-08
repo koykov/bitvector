@@ -17,26 +17,26 @@ const (
 	vectorDumpVersion   = 1.0
 )
 
-// Vector represents simple bit array implementation without race protection. It means you may do concurrent read, but
+// vector represents simple bit array implementation without race protection. It means you may do concurrent read, but
 // cannot do simultaneous read/write operations.
-type Vector struct {
+type vector struct {
 	buf  []uint8
 	c, s uint64
 }
 
 // NewVector make new bit array with given size.
-func NewVector(size uint64) (*Vector, error) {
+func NewVector(size uint64) (Interface, error) {
 	if size == 0 {
 		return nil, ErrZeroSize
 	}
-	return &Vector{
+	return &vector{
 		buf: make([]uint8, size/8+1),
 		c:   size,
 	}, nil
 }
 
 // Set writes new bit at given position.
-func (vec *Vector) Set(i uint64) bool {
+func (vec *vector) Set(i uint64) bool {
 	if len(vec.buf) <= int(i/8) {
 		return false
 	}
@@ -46,7 +46,7 @@ func (vec *Vector) Set(i uint64) bool {
 }
 
 // Xor applies xor at given position.
-func (vec *Vector) Xor(i uint64) bool {
+func (vec *vector) Xor(i uint64) bool {
 	if len(vec.buf) <= int(i/8) {
 		return false
 	}
@@ -55,7 +55,7 @@ func (vec *Vector) Xor(i uint64) bool {
 }
 
 // Unset clears bit at given position.
-func (vec *Vector) Unset(i uint64) bool {
+func (vec *vector) Unset(i uint64) bool {
 	if len(vec.buf) <= int(i/8) {
 		return false
 	}
@@ -65,7 +65,7 @@ func (vec *Vector) Unset(i uint64) bool {
 }
 
 // Get returns bit value from given position.
-func (vec *Vector) Get(i uint64) uint8 {
+func (vec *vector) Get(i uint64) uint8 {
 	if len(vec.buf) <= int(i/8) {
 		return 0
 	}
@@ -73,17 +73,17 @@ func (vec *Vector) Get(i uint64) uint8 {
 }
 
 // Size returns number of items added to the vector.
-func (vec *Vector) Size() uint64 {
+func (vec *vector) Size() uint64 {
 	return vec.s
 }
 
 // Capacity returns total capacity of the vector.
-func (vec *Vector) Capacity() uint64 {
+func (vec *vector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 8
 }
 
 // Popcnt returns population count (number of set bits) in the vector.
-func (vec *Vector) Popcnt() (r uint64) {
+func (vec *vector) Popcnt() (r uint64) {
 	buf := vec.buf
 	n := len(buf)
 	if n == 0 {
@@ -110,10 +110,10 @@ func (vec *Vector) Popcnt() (r uint64) {
 	return
 }
 
-func (vec *Vector) Difference(other Interface) (r uint64, err error) {
-	var ovec *Vector
+func (vec *vector) Difference(other Interface) (r uint64, err error) {
+	var ovec *vector
 	switch x := any(other).(type) {
-	case *Vector:
+	case *vector:
 		ovec = x
 	default:
 		err = ErrWrongType
@@ -130,8 +130,8 @@ func (vec *Vector) Difference(other Interface) (r uint64, err error) {
 	return
 }
 
-func (vec *Vector) Clone() Interface {
-	clone := &Vector{
+func (vec *vector) Clone() Interface {
+	clone := &vector{
 		buf: make([]uint8, len(vec.buf)),
 		c:   vec.c,
 		s:   vec.s,
@@ -141,14 +141,14 @@ func (vec *Vector) Clone() Interface {
 }
 
 // Reset resets the whole bit array.
-func (vec *Vector) Reset() {
+func (vec *vector) Reset() {
 	if len(vec.buf) == 0 {
 		return
 	}
 	memclr64.ClearBytes(vec.buf)
 }
 
-func (vec *Vector) ReadFrom(r io.Reader) (n int64, err error) {
+func (vec *vector) ReadFrom(r io.Reader) (n int64, err error) {
 	var (
 		buf [32]byte
 		m   int
@@ -182,7 +182,7 @@ func (vec *Vector) ReadFrom(r io.Reader) (n int64, err error) {
 	return
 }
 
-func (vec *Vector) WriteTo(w io.Writer) (n int64, err error) {
+func (vec *vector) WriteTo(w io.Writer) (n int64, err error) {
 	var (
 		buf [32]byte
 		m   int
