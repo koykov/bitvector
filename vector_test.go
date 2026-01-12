@@ -54,6 +54,28 @@ func TestVector(t *testing.T) {
 			t.Errorf("difference error: %v, %v", diff, err)
 		}
 	})
+	t.Run("merge", func(t *testing.T) {
+		vec0 := prepare(10)
+		vec1 := prepare(10)
+		vec0.Reset()
+		vec0.Set(0)
+		vec0.Set(8)
+
+		vec1.Reset()
+		vec1.Set(1)
+		vec1.Set(9)
+
+		err := vec0.Merge(vec1)
+		if err != nil {
+			t.Error(err)
+		}
+		if vec0.Get(1) != 1 {
+			t.FailNow()
+		}
+		if vec0.Get(9) != 1 {
+			t.FailNow()
+		}
+	})
 	t.Run("writer", func(t *testing.T) {
 		vec := prepare(10)
 		f, err := os.OpenFile("testdata/vector.bin", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -182,6 +204,22 @@ func BenchmarkVector(b *testing.B) {
 				clone.Reset()
 				for j := 0; j < b.N; j++ {
 					_, _ = vec.Difference(clone)
+				}
+			})
+		}
+	})
+	b.Run("merge", func(b *testing.B) {
+		const base = 1000
+		for i := 0; i < 7; i++ {
+			sz := base * pow(10, i)
+			b.Run(strconv.Itoa(sz), func(b *testing.B) {
+				b.ReportAllocs()
+				b.SetBytes(int64(sz))
+				vec, _ := NewVector(uint64(sz))
+				clone := vec.Clone()
+				vec.Reset()
+				for j := 0; j < b.N; j++ {
+					_ = vec.Merge(clone)
 				}
 			})
 		}
