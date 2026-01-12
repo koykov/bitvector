@@ -7,6 +7,7 @@ import (
 	"math/bits"
 	"unsafe"
 
+	"github.com/koykov/simd/bitwise64"
 	"github.com/koykov/simd/hamming64"
 	"github.com/koykov/simd/memclr64"
 	"github.com/koykov/simd/popcnt64"
@@ -128,6 +129,20 @@ func (vec *vector) Difference(other Interface) (r uint64, err error) {
 	diff := hamming64.DistanceBytes(buf, obuf)
 	r = uint64(diff)
 	return
+}
+
+func (vec *vector) Merge(other Interface) error {
+	var ovec *vector
+	switch x := any(other).(type) {
+	case *vector:
+		ovec = x
+	default:
+		return ErrWrongType
+	}
+	buf := vec.buf
+	obuf := ovec.buf
+	bitwise64.OrBytes(buf, obuf)
+	return nil
 }
 
 func (vec *vector) Clone() Interface {
