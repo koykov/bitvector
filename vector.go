@@ -132,6 +132,14 @@ func (vec *vector) Difference(other Interface) (r uint64, err error) {
 }
 
 func (vec *vector) Merge(other Interface) error {
+	return vec.bitwise(other, bitwise64.OrBytes)
+}
+
+func (vec *vector) Filter(other Interface) error {
+	return vec.bitwise(other, bitwise64.AndBytes)
+}
+
+func (vec *vector) bitwise(other Interface, fn func(a, b []byte)) error {
 	var ovec *vector
 	switch x := any(other).(type) {
 	case *vector:
@@ -141,7 +149,7 @@ func (vec *vector) Merge(other Interface) error {
 	}
 	buf := vec.buf
 	obuf := ovec.buf
-	bitwise64.OrBytes(buf, obuf)
+	fn(buf, obuf)
 	return nil
 }
 

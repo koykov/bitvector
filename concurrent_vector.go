@@ -144,6 +144,14 @@ func (vec *concurrentVector) Difference(other Interface) (r uint64, err error) {
 }
 
 func (vec *concurrentVector) Merge(other Interface) error {
+	return vec.bitwise(other, func(a, b uint32) uint32 { return a | b })
+}
+
+func (vec *concurrentVector) Filter(other Interface) error {
+	return vec.bitwise(other, func(a, b uint32) uint32 { return a & b })
+}
+
+func (vec *concurrentVector) bitwise(other Interface, fn func(a, b uint32) uint32) error {
 	var ovec *concurrentVector
 	switch x := any(other).(type) {
 	case *concurrentVector:
@@ -160,7 +168,8 @@ func (vec *concurrentVector) Merge(other Interface) error {
 	for i := 0; i < n; i++ {
 		for j := uint64(0); j < vec.lim; j++ {
 			o := atomic.LoadUint32(&vec.buf[i])
-			n1 := o | atomic.LoadUint32(&ovec.buf[i])
+			v := atomic.LoadUint32(&ovec.buf[i])
+			n1 := fn(o, v)
 			if atomic.CompareAndSwapUint32(&vec.buf[i], o, n1) {
 				break
 			}
