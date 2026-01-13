@@ -24,6 +24,8 @@ type Interface interface {
 	Difference(p Interface) (uint64, error)
 	// Merge applies bitwise OR operation with vector p.
 	Merge(p Interface) error
+	// Filter applies bitwise AND operation with vector p.
+	Filter(p Interface) error
 	// Clone returns a copy of the bit array.
 	Clone() Interface
 	// Reset resets the whole bit array.
