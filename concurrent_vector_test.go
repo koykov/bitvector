@@ -100,6 +100,16 @@ func TestConcurrentVector(t *testing.T) {
 			t.FailNow()
 		}
 	})
+	t.Run("invert", func(t *testing.T) {
+		vec := prepare(10)
+		vec.Invert()
+		if vec.Get(0) != 1 {
+			t.FailNow()
+		}
+		if vec.Get(3) != 0 {
+			t.FailNow()
+		}
+	})
 	t.Run("writer", func(t *testing.T) {
 		vec := prepare(10)
 		f, err := os.OpenFile("testdata/concurrent_vector.bin", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -258,6 +268,21 @@ func BenchmarkConcurrentVector(b *testing.B) {
 				vec.Reset()
 				for j := 0; j < b.N; j++ {
 					_ = vec.Filter(clone)
+				}
+			})
+		}
+	})
+	b.Run("invert", func(b *testing.B) {
+		const base = 1000
+		for i := 0; i < 7; i++ {
+			sz := base * pow(10, i)
+			b.Run(strconv.Itoa(sz), func(b *testing.B) {
+				b.ReportAllocs()
+				b.SetBytes(int64(sz))
+				vec, _ := NewVector(uint64(sz))
+				vec.Reset()
+				for j := 0; j < b.N; j++ {
+					vec.Invert()
 				}
 			})
 		}
