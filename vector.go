@@ -153,6 +153,10 @@ func (vec *vector) bitwise(other Interface, fn func(a, b []byte)) error {
 	return nil
 }
 
+func (vec *vector) Invert() {
+	bitwise64.NotBytes(vec.buf)
+}
+
 func (vec *vector) Clone() Interface {
 	clone := &vector{
 		buf: make([]uint8, len(vec.buf)),

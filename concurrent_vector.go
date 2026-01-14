@@ -178,6 +178,23 @@ func (vec *concurrentVector) bitwise(other Interface, fn func(a, b uint32) uint3
 	return nil
 }
 
+func (vec *concurrentVector) Invert() {
+	n := len(vec.buf)
+	if n == 0 {
+		return
+	}
+	_ = vec.buf[n-1]
+	for i := 0; i < n; i++ {
+		for j := uint64(0); j < vec.lim; j++ {
+			o := atomic.LoadUint32(&vec.buf[i])
+			n1 := ^o
+			if atomic.CompareAndSwapUint32(&vec.buf[i], o, n1) {
+				break
+			}
+		}
+	}
+}
+
 func (vec *concurrentVector) Clone() Interface {
 	clone := &concurrentVector{
 		buf: make([]uint32, len(vec.buf)),

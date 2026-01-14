@@ -26,6 +26,8 @@ type Interface interface {
 	Merge(p Interface) error
 	// Filter applies bitwise AND operation with vector p.
 	Filter(p Interface) error
+	// Invert changes bits in vector.
+	Invert()
 	// Clone returns a copy of the bit array.
 	Clone() Interface
 	// Reset resets the whole bit array.
