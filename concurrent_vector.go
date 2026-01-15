@@ -143,6 +143,58 @@ func (vec *concurrentVector) Difference(other Interface) (r uint64, err error) {
 	return
 }
 
+func (vec *concurrentVector) Merge(other Interface) error {
+	return vec.bitwise(other, func(a, b uint32) uint32 { return a | b })
+}
+
+func (vec *concurrentVector) Filter(other Interface) error {
+	return vec.bitwise(other, func(a, b uint32) uint32 { return a & b })
+}
+
+func (vec *concurrentVector) bitwise(other Interface, fn func(a, b uint32) uint32) error {
+	var ovec *concurrentVector
+	switch x := any(other).(type) {
+	case *concurrentVector:
+		ovec = x
+	default:
+		return ErrWrongType
+	}
+	n := min(len(vec.buf), len(ovec.buf))
+	if n == 0 {
+		return nil
+	}
+	_ = vec.buf[n-1]
+	_ = ovec.buf[n-1]
+	for i := 0; i < n; i++ {
+		for j := uint64(0); j < vec.lim; j++ {
+			o := atomic.LoadUint32(&vec.buf[i])
+			v := atomic.LoadUint32(&ovec.buf[i])
+			n1 := fn(o, v)
+			if atomic.CompareAndSwapUint32(&vec.buf[i], o, n1) {
+				break
+			}
+		}
+	}
+	return nil
+}
+
+func (vec *concurrentVector) Invert() {
+	n := len(vec.buf)
+	if n == 0 {
+		return
+	}
+	_ = vec.buf[n-1]
+	for i := 0; i < n; i++ {
+		for j := uint64(0); j < vec.lim; j++ {
+			o := atomic.LoadUint32(&vec.buf[i])
+			n1 := ^o
+			if atomic.CompareAndSwapUint32(&vec.buf[i], o, n1) {
+				break
+			}
+		}
+	}
+}
+
 func (vec *concurrentVector) Clone() Interface {
 	clone := &concurrentVector{
 		buf: make([]uint32, len(vec.buf)),

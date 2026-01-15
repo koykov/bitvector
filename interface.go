@@ -22,6 +22,12 @@ type Interface interface {
 	Popcnt() uint64
 	// Difference returns count of different bits between two vectors.
 	Difference(p Interface) (uint64, error)
+	// Merge applies bitwise OR operation with vector p.
+	Merge(p Interface) error
+	// Filter applies bitwise AND operation with vector p.
+	Filter(p Interface) error
+	// Invert changes bits in vector.
+	Invert()
 	// Clone returns a copy of the bit array.
 	Clone() Interface
 	// Reset resets the whole bit array.
