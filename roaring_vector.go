@@ -1,6 +1,9 @@
 package bitvector
 
-import "io"
+import (
+	"io"
+	"math"
+)
 
 type roaringVector struct{}
 
@@ -63,10 +66,6 @@ func (vec *roaringVector) Clone() Interface {
 	return nil
 }
 
-func (vec *roaringVector) Reset() {
-	// todo implement me
-}
-
 func (vec *roaringVector) ReadFrom(r io.Reader) (n int64, err error) {
 	// todo implement me
 	return 0, err
@@ -75,4 +74,16 @@ func (vec *roaringVector) ReadFrom(r io.Reader) (n int64, err error) {
 func (vec *roaringVector) WriteTo(w io.Writer) (n int64, err error) {
 	// todo implement me
 	return 0, err
+}
+
+func (vec *roaringVector) Reset() {
+	// todo implement me
+}
+
+func (vec *roaringVector) hibits(x uint64) uint32 {
+	return uint32(x >> 32)
+}
+
+func (vec *roaringVector) lobits(x uint64) uint32 {
+	return uint32(x & math.MaxUint32)
 }
