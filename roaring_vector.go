@@ -7,6 +7,15 @@ import (
 
 type roaringVector struct{}
 
+func NewRoaringVector(size uint64) (Interface, error) {
+	if size == 0 {
+		return nil, ErrZeroSize
+	}
+	return &roaringVector{
+		// ...
+	}, nil
+}
+
 func (vec *roaringVector) Set(uint64) bool {
 	// todo implement me
 	return false
