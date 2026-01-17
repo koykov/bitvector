@@ -3,9 +3,12 @@ package bitvector
 import (
 	"io"
 	"math"
+	"sort"
 )
 
-type roaringVector struct{}
+type roaringVector struct {
+	keys []uint32
+}
 
 func NewRoaringVector(size uint64) (Interface, error) {
 	if size == 0 {
@@ -95,4 +98,17 @@ func (vec *roaringVector) hibits(x uint64) uint32 {
 
 func (vec *roaringVector) lobits(x uint64) uint32 {
 	return uint32(x & math.MaxUint32)
+}
+
+func (vec *roaringVector) indexhb(hb uint32) int {
+	n := len(vec.keys)
+	if n == 0 {
+		return -1
+	}
+	if hb == vec.keys[n-1] {
+		return n - 1
+	}
+	return sort.Search(n, func(i int) bool {
+		return vec.keys[i] == hb
+	})
 }
