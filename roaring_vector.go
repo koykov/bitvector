@@ -8,6 +8,8 @@ import (
 
 type roaringVector struct {
 	keys []uint32
+	buf  []bitmap
+	cow  []uint64
 }
 
 func NewRoaringVector(size uint64) (Interface, error) {
@@ -19,8 +21,14 @@ func NewRoaringVector(size uint64) (Interface, error) {
 	}, nil
 }
 
-func (vec *roaringVector) Set(uint64) bool {
-	// todo implement me
+func (vec *roaringVector) Set(x uint64) bool {
+	hib, lob := vec.hibits(x), vec.lobits(x)
+	i := vec.indexhb(hib)
+	if i < 0 {
+		// todo add new bitmap
+	}
+	// todo use existing bitmap
+	_ = lob
 	return false
 }
 
