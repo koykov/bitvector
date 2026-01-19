@@ -8,11 +8,12 @@ type bitmap struct {
 }
 
 func (b *bitmap) add(x uint32) {
+	const maxSize = 4096
 	n := len(b.buf)
 	if n == 0 {
 		return
 	}
-	if n < 4096 && b.buf[n-1] < x {
+	if n < maxSize && b.buf[n-1] < x {
 		b.buf = append(b.buf, x)
 		return
 	}
@@ -20,7 +21,7 @@ func (b *bitmap) add(x uint32) {
 		return b.buf[i] == x
 	})
 	if pos < 0 {
-		if n >= 4096 {
+		if n >= maxSize {
 			// todo add new bitmap
 			return
 		}
