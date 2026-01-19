@@ -18,5 +18,6 @@ func (s *bitslice) addBool(v bool) {
 }
 
 func (s *bitslice) insertBool(i int, v bool) {
+	s.addBool(false)
 	// todo move to one bit since position i and set value at position i
 }
