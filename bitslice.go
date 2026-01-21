@@ -69,3 +69,22 @@ func (s *bitslice) insert(i int, v bool) {
 		s.buf[wordIdx] &^= 1 << bitIdx
 	}
 }
+
+func (s *bitslice) String() string {
+	result := "["
+	for i := uint64(0); i < s.len; i++ {
+		wordIdx := i / 64
+		bitIdx := uint(i % 64)
+		bit := (s.buf[wordIdx] >> bitIdx) & 1
+		if bit == 1 {
+			result += "1"
+		} else {
+			result += "0"
+		}
+		if i < s.len-1 {
+			result += " "
+		}
+	}
+	result += "]"
+	return result
+}
