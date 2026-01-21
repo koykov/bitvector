@@ -9,7 +9,7 @@ import (
 type roaringVector struct {
 	keys []uint32
 	buf  []*bitmap
-	cow  []bool
+	cow  bitslice
 }
 
 func NewRoaringVector(size uint64) (Interface, error) {
@@ -43,9 +43,7 @@ func (vec *roaringVector) addhb(i int, hb uint32, bm *bitmap) {
 	copy(vec.buf[i+1:], vec.buf[i:])
 	vec.buf[i] = bm
 
-	vec.cow = append(vec.cow, false)
-	copy(vec.cow[i+1:], vec.cow[i:])
-	vec.cow[i] = false
+	vec.cow.insert(i, false)
 }
 
 func (vec *roaringVector) Xor(uint64) bool {
