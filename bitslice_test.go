@@ -197,7 +197,7 @@ func TestBitslice(t *testing.T) {
 			}{
 				{0, 0},
 				{1, 1},
-				{63, 0},
+				{63, 1},
 				{64, 1},
 				{99, 0},
 				{100, 0},
@@ -207,11 +207,9 @@ func TestBitslice(t *testing.T) {
 			}
 
 			for _, tc := range testCases {
-				wordIdx := tc.pos / 64
-				bitIdx := uint(tc.pos % 64)
-				bit := (bs.buf[wordIdx] >> bitIdx) & 1
-				if bit != tc.expected {
-					t.Errorf("Bit at position %d: expected %d, got %d", tc.pos, tc.expected, bit)
+				v := bs.getBit(tc.pos)
+				if uint64(v) != tc.expected {
+					t.Errorf("Bit at position %d: expected %d, got %d", tc.pos, tc.expected, v)
 				}
 			}
 		})

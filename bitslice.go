@@ -70,6 +70,16 @@ func (s *bitslice) insert(i int, v bool) {
 	}
 }
 
+func (s *bitslice) getBit(i int) uint8 {
+	wordIdx := i / 64
+	bitIdx := uint(i % 64)
+	return uint8((s.buf[wordIdx] >> bitIdx) & 1)
+}
+
+func (s *bitslice) getBool(i int) bool {
+	return s.getBit(i) == 1
+}
+
 func (s *bitslice) String() string {
 	result := "["
 	for i := uint64(0); i < s.len; i++ {
