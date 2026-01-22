@@ -76,7 +76,7 @@ func (s *bitslice) getBit(i int) uint8 {
 	return uint8((s.buf[wordIdx] >> bitIdx) & 1)
 }
 
-func (s *bitslice) getBool(i int) bool {
+func (s *bitslice) get(i int) bool {
 	return s.getBit(i) == 1
 }
 
