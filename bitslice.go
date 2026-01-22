@@ -1,30 +1,30 @@
 package bitvector
 
 type bitslice struct {
-	len uint64
+	ln  uint64
 	buf []uint64
 }
 
 func (s *bitslice) add(v bool) {
-	if s.len%64 == 0 {
+	if s.ln%64 == 0 {
 		s.buf = append(s.buf, 0)
 	}
-	s.len++
+	s.ln++
 	if !v {
 		return
 	}
-	i, off := s.len/64, s.len%64
+	i, off := s.ln/64, s.ln%64
 	s.buf[i] |= 1 << off
 }
 
 func (s *bitslice) insert(i int, v bool) {
-	if i < 0 || uint64(i) > s.len {
+	if i < 0 || uint64(i) > s.ln {
 		return
 	}
 
-	s.len++
+	s.ln++
 
-	neededBits := (s.len + 63) / 64
+	neededBits := (s.ln + 63) / 64
 	if neededBits > uint64(len(s.buf)) {
 		newBuf := make([]uint64, neededBits)
 		copy(newBuf, s.buf)
@@ -34,7 +34,7 @@ func (s *bitslice) insert(i int, v bool) {
 	wordIdx := uint64(i) / 64
 	bitIdx := uint64(i) % 64
 
-	if uint64(i) == s.len-1 {
+	if uint64(i) == s.ln-1 {
 		if v {
 			s.buf[wordIdx] |= 1 << bitIdx
 		} else {
@@ -43,7 +43,7 @@ func (s *bitslice) insert(i int, v bool) {
 		return
 	}
 
-	lastWordIdx := (s.len - 1) / 64
+	lastWordIdx := (s.ln - 1) / 64
 
 	for curWordIdx := lastWordIdx; curWordIdx > wordIdx; curWordIdx-- {
 		prevWordIdx := curWordIdx - 1
@@ -80,9 +80,13 @@ func (s *bitslice) get(i int) bool {
 	return s.getBit(i) == 1
 }
 
+func (s *bitslice) len() uint64 {
+	return s.ln
+}
+
 func (s *bitslice) String() string {
 	result := "["
-	for i := uint64(0); i < s.len; i++ {
+	for i := uint64(0); i < s.ln; i++ {
 		wordIdx := i / 64
 		bitIdx := uint(i % 64)
 		bit := (s.buf[wordIdx] >> bitIdx) & 1
@@ -91,7 +95,7 @@ func (s *bitslice) String() string {
 		} else {
 			result += "0"
 		}
-		if i < s.len-1 {
+		if i < s.ln-1 {
 			result += " "
 		}
 	}
