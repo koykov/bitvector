@@ -31,3 +31,10 @@ func (b *bitmap) add(x uint32) {
 		b.buf[pos1] = x
 	}
 }
+
+func (b *bitmap) clone() *bitmap {
+	return &bitmap{
+		buf:  append([]uint32{}, b.buf...),
+		uniq: b.uniq,
+	}
+}

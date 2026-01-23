@@ -30,8 +30,17 @@ func (vec *roaringVector) Set(x uint64) bool {
 		vec.addhb(-i-1, hib, &bm)
 		return true
 	}
-	// todo use existing bitmap
-	return false
+
+	var bm *bitmap
+	if vec.cow.get(i) {
+		bm = vec.buf[i].clone()
+	} else {
+		bm = vec.buf[i]
+	}
+	bm.add(lob)
+	vec.buf[i] = bm
+
+	return true
 }
 
 func (vec *roaringVector) addhb(i int, hb uint32, bm *bitmap) {
