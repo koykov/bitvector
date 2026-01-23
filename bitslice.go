@@ -1,5 +1,7 @@
 package bitvector
 
+import "unsafe"
+
 type bitslice struct {
 	ln  uint64
 	buf []uint64
@@ -85,20 +87,29 @@ func (s *bitslice) len() uint64 {
 }
 
 func (s *bitslice) String() string {
-	result := "["
+	buf := make([]byte, 0, s.ln+2)
+	buf = append(buf, '[')
 	for i := uint64(0); i < s.ln; i++ {
 		wordIdx := i / 64
 		bitIdx := uint(i % 64)
 		bit := (s.buf[wordIdx] >> bitIdx) & 1
 		if bit == 1 {
-			result += "1"
+			buf = append(buf, '1')
 		} else {
-			result += "0"
-		}
-		if i < s.ln-1 {
-			result += " "
+			buf = append(buf, '0')
 		}
 	}
-	result += "]"
-	return result
+	buf = append(buf, ']')
+
+	type h struct {
+		p    uintptr
+		l, c int
+	}
+	type sh struct {
+		p uintptr
+		l int
+	}
+	h_ := *(*h)(unsafe.Pointer(&buf))
+	sh_ := sh{p: h_.p, l: h_.l}
+	return *(*string)(unsafe.Pointer(&sh_))
 }
