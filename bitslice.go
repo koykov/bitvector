@@ -86,6 +86,11 @@ func (s *bitslice) len() uint64 {
 	return s.ln
 }
 
+func (s *bitslice) reset() {
+	s.buf = s.buf[:0]
+	s.ln = 0
+}
+
 func (s *bitslice) String() string {
 	var buf bytes.Buffer
 	buf.Grow(int(s.ln + 2))
