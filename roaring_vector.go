@@ -78,13 +78,11 @@ func (vec *roaringVector) Get(x uint64) uint8 {
 }
 
 func (vec *roaringVector) Size() uint64 {
-	// todo implement me
-	return 0
+	return uint64(len(vec.keys))
 }
 
 func (vec *roaringVector) Capacity() uint64 {
-	// todo implement me
-	return 0
+	return uint64(cap(vec.keys))
 }
 
 func (vec *roaringVector) Popcnt() uint64 {
