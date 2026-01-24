@@ -33,8 +33,9 @@ func (b *bitmap) add(x uint32) {
 }
 
 func (b *bitmap) index(x uint32) int {
-	// todo implement me
-	return -1
+	return sort.Search(len(b.buf), func(i int) bool {
+		return b.buf[i] == x
+	})
 }
 
 func (b *bitmap) clone() *bitmap {
