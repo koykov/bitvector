@@ -65,8 +65,15 @@ func (vec *roaringVector) Unset(uint64) bool {
 	return false
 }
 
-func (vec *roaringVector) Get(uint64) uint8 {
-	// todo implement me
+func (vec *roaringVector) Get(x uint64) uint8 {
+	hib, lob := vec.hibits(x), vec.lobits(x)
+	i := vec.indexhb(hib)
+	if i < 0 || i >= len(vec.buf) {
+		return 0
+	}
+	if j := vec.buf[i].index(lob); j >= 0 {
+		return 1
+	}
 	return 0
 }
 

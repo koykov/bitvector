@@ -32,6 +32,11 @@ func (b *bitmap) add(x uint32) {
 	}
 }
 
+func (b *bitmap) index(x uint32) int {
+	// todo implement me
+	return -1
+}
+
 func (b *bitmap) clone() *bitmap {
 	return &bitmap{
 		buf:  append([]uint32{}, b.buf...),
