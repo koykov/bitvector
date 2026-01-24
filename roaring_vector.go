@@ -85,9 +85,11 @@ func (vec *roaringVector) Capacity() uint64 {
 	return uint64(cap(vec.keys))
 }
 
-func (vec *roaringVector) Popcnt() uint64 {
-	// todo implement me
-	return 0
+func (vec *roaringVector) Popcnt() (c uint64) {
+	for i := range vec.buf {
+		c += uint64(vec.buf[i].size())
+	}
+	return
 }
 
 func (vec *roaringVector) Difference(p Interface) (uint64, error) {

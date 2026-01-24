@@ -44,3 +44,7 @@ func (b *bitmap) clone() *bitmap {
 		uniq: b.uniq,
 	}
 }
+
+func (b *bitmap) size() int {
+	return len(b.buf)
+}
