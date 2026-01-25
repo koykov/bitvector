@@ -72,6 +72,60 @@ func (s *bitslice) insert(i int, v bool) {
 	}
 }
 
+func (s *bitslice) delete(i int) bool {
+	if i < 0 || uint64(i) >= s.ln {
+		return false
+	}
+
+	if s.ln == 0 {
+		return false
+	}
+
+	wordIdx := uint64(i) / 64
+	bitIdx := uint64(i) % 64
+
+	lastWordIdx := (s.ln - 1) / 64
+
+	maskBefore := uint64(1) << bitIdx
+	maskBefore = maskBefore - 1
+
+	maskAfter := ^((uint64(1) << (bitIdx + 1)) - 1)
+
+	lowerBits := s.buf[wordIdx] & maskBefore
+
+	upperBits := s.buf[wordIdx] & maskAfter
+	upperBits >>= 1
+
+	s.buf[wordIdx] = lowerBits | upperBits
+
+	for curWordIdx := wordIdx; curWordIdx < lastWordIdx; curWordIdx++ {
+
+		nextWordIdx := curWordIdx + 1
+		lsbFromNext := s.buf[nextWordIdx] & 1
+
+		s.buf[curWordIdx] |= lsbFromNext << 63
+
+		s.buf[nextWordIdx] >>= 1
+	}
+
+	s.ln--
+	if s.ln > 0 {
+		lastWordIdxAfter := (s.ln - 1) / 64
+		bitsInLastWord := s.ln % 64
+		if bitsInLastWord == 0 {
+			bitsInLastWord = 64
+		}
+
+		mask := (uint64(1) << bitsInLastWord) - 1
+		s.buf[lastWordIdxAfter] &= mask
+
+		for i := lastWordIdxAfter + 1; i < uint64(len(s.buf)); i++ {
+			s.buf[i] = 0
+		}
+	}
+	return true
+}
+
 func (s *bitslice) getBit(i int) uint8 {
 	wordIdx := i / 64
 	bitIdx := uint(i % 64)
