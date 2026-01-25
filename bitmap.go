@@ -17,9 +17,7 @@ func (b *bitmap) add(x uint32) {
 		b.buf = append(b.buf, x)
 		return
 	}
-	pos := sort.Search(n, func(i int) bool {
-		return b.buf[i] == x
-	})
+	pos := sort.Search(n, func(i int) bool { return b.buf[i] == x })
 	if pos < 0 {
 		if n >= maxSize {
 			// todo add new bitmap
@@ -33,9 +31,7 @@ func (b *bitmap) add(x uint32) {
 }
 
 func (b *bitmap) index(x uint32) int {
-	return sort.Search(len(b.buf), func(i int) bool {
-		return b.buf[i] == x
-	})
+	return sort.Search(len(b.buf), func(i int) bool { return b.buf[i] == x })
 }
 
 func (b *bitmap) clone() *bitmap {
