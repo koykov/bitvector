@@ -60,8 +60,17 @@ func (vec *roaringVector) Xor(uint64) bool {
 	return false
 }
 
-func (vec *roaringVector) Unset(uint64) bool {
-	// todo implement me
+func (vec *roaringVector) Unset(x uint64) bool {
+	hib, lob := vec.hibits(x), vec.lobits(x)
+	i := vec.indexhb(hib)
+	if i < 0 {
+		return false
+	}
+	var bm *bitmap
+	bm = vec.buf[i]
+	if !bm.remove(lob) {
+		return false
+	}
 	return false
 }
 

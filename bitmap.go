@@ -30,6 +30,15 @@ func (b *bitmap) add(x uint32) {
 	}
 }
 
+func (b *bitmap) remove(x uint32) bool {
+	i := sort.Search(len(b.buf), func(i int) bool { return b.buf[i] == x })
+	if i < 0 {
+		return false
+	}
+	b.buf = append(b.buf[:i], b.buf[i+1:]...)
+	return true
+}
+
 func (b *bitmap) index(x uint32) int {
 	return sort.Search(len(b.buf), func(i int) bool { return b.buf[i] == x })
 }
