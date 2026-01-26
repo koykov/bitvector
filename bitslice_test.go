@@ -205,4 +205,179 @@ func TestBitslice(t *testing.T) {
 			}
 		})
 	})
+	t.Run("delete", func(t *testing.T) {
+		t.Run("at begin", func(t *testing.T) {
+			bs := &bitslice{ln: 4, buf: []uint64{0b1101}}
+			bs.delete(0)
+
+			if bs.ln != 3 {
+				t.Errorf("Expected length 3, got %d", bs.ln)
+			}
+
+			expectedBits := []bool{false, true, true}
+			for i, expected := range expectedBits {
+				bit := (bs.buf[0] >> uint(i)) & 1
+				isSet := bit == 1
+				if isSet != expected {
+					t.Errorf("Bit at position %d: expected %v, got %v", i, expected, isSet)
+				}
+			}
+		})
+
+		t.Run("middle", func(t *testing.T) {
+			bs := &bitslice{ln: 5, buf: []uint64{0b10101}}
+			bs.delete(2)
+
+			if bs.ln != 4 {
+				t.Errorf("Expected length 4, got %d", bs.ln)
+			}
+
+			expectedBits := []bool{true, false, false, true}
+			for i, expected := range expectedBits {
+				bit := (bs.buf[0] >> uint(i)) & 1
+				isSet := bit == 1
+				if isSet != expected {
+					t.Errorf("Bit at position %d: expected %v, got %v", i, expected, isSet)
+				}
+			}
+		})
+
+		t.Run("from end", func(t *testing.T) {
+			bs := &bitslice{ln: 4, buf: []uint64{0b1101}}
+			bs.delete(3)
+
+			if bs.ln != 3 {
+				t.Errorf("Expected length 3, got %d", bs.ln)
+			}
+
+			expectedBits := []bool{true, false, true}
+			for i, expected := range expectedBits {
+				bit := (bs.buf[0] >> uint(i)) & 1
+				isSet := bit == 1
+				if isSet != expected {
+					t.Errorf("Bit at position %d: expected %v, got %v", i, expected, isSet)
+				}
+			}
+		})
+
+		t.Run("single bit", func(t *testing.T) {
+			bs := &bitslice{ln: 1, buf: []uint64{1}}
+			bs.delete(0)
+
+			if bs.ln != 0 {
+				t.Errorf("Expected length 0, got %d", bs.ln)
+			}
+			if bs.buf[0] != 0 {
+				t.Errorf("Buffer should be cleared, got %b", bs.buf[0])
+			}
+		})
+
+		t.Run("at word bound", func(t *testing.T) {
+			bs := &bitslice{
+				ln:  65,
+				buf: []uint64{0xFFFFFFFFFFFFFFFF, 0x1},
+			}
+
+			bs.delete(63)
+
+			if bs.ln != 64 {
+				t.Errorf("Expected length 64, got %d", bs.ln)
+			}
+
+			if (bs.buf[0]>>63)&1 != 1 {
+				t.Error("Last bit of first word should be 1")
+			}
+
+			if bs.buf[1] != 0 {
+				t.Errorf("Second word should be 0, got %b", bs.buf[1])
+			}
+		})
+
+		t.Run("high bits clear", func(t *testing.T) {
+			bs := &bitslice{ln: 65, buf: []uint64{0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF}}
+
+			bs.buf[1] = 0x1
+
+			bs.delete(0)
+
+			if bs.buf[1] != 0 {
+				t.Errorf("High bits in second word should be cleared, got %b", bs.buf[1])
+			}
+		})
+
+		t.Run("multi", func(t *testing.T) {
+			bs := &bitslice{ln: 8, buf: []uint64{0b11110000}}
+
+			bs.delete(4)
+			bs.delete(0)
+			bs.delete(2)
+
+			if bs.ln != 5 {
+				t.Errorf("Expected length 5, got %d", bs.ln)
+			}
+
+			expectedBits := []bool{false, false, true, true, true}
+			for i, expected := range expectedBits {
+				bit := (bs.buf[0] >> uint(i)) & 1
+				isSet := bit == 1
+				if isSet != expected {
+					t.Errorf("Bit at position %d: expected %v, got %v", i, expected, isSet)
+				}
+			}
+		})
+
+		t.Run("insert and delete", func(t *testing.T) {
+			bs := &bitslice{ln: 0, buf: make([]uint64, 2)}
+
+			for i := 0; i < 10; i++ {
+				bs.insert(i, i%2 == 0)
+			}
+
+			bs.delete(2)
+			bs.insert(5, true)
+			bs.delete(0)
+
+			if bs.ln != 9 {
+				t.Errorf("Expected length 9, got %d", bs.ln)
+			}
+
+			expectedBits := []bool{false, false, true, false, true, true, false, true, false}
+			for i, expected := range expectedBits {
+				wordIdx := i / 64
+				bitIdx := uint(i % 64)
+				bit := (bs.buf[wordIdx] >> bitIdx) & 1
+				isSet := bit == 1
+				if isSet != expected {
+					t.Errorf("Bit at position %d: expected %v, got %v", i, expected, isSet)
+				}
+			}
+		})
+
+		t.Run("multi words", func(t *testing.T) {
+			bs := &bitslice{
+				ln: 130,
+				buf: []uint64{
+					0xAAAAAAAAAAAAAAAA,
+					0x5555555555555555,
+					0x3,
+				},
+			}
+
+			bs.delete(80)
+
+			if bs.ln != 129 {
+				t.Errorf("Expected length 129, got %d", bs.ln)
+			}
+
+			bit79 := (bs.buf[1] >> 15) & 1
+			if bit79 != 1 {
+				t.Error("Bit 79 should be 1")
+			}
+
+			bit80 := (bs.buf[1] >> 16) & 1
+			if bit80 != 0 {
+				t.Error("Bit 80 should be 0")
+			}
+		})
+	})
 }
