@@ -369,12 +369,12 @@ func TestBitslice(t *testing.T) {
 				t.Errorf("Expected length 129, got %d", bs.ln)
 			}
 
-			bit79 := (bs.buf[1] >> 15) & 1
-			if bit79 != 1 {
+			bit79 := bs.getBit(79)
+			if bit79 != 0 {
 				t.Error("Bit 79 should be 1")
 			}
 
-			bit80 := (bs.buf[1] >> 16) & 1
+			bit80 := bs.getBit(80)
 			if bit80 != 0 {
 				t.Error("Bit 80 should be 0")
 			}
