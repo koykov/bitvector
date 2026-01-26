@@ -71,6 +71,13 @@ func (vec *roaringVector) Unset(x uint64) bool {
 	if !bm.remove(lob) {
 		return false
 	}
+	if bm.size() == 0 {
+		copy(vec.keys[i:], vec.keys[i+1:])
+		vec.keys = vec.keys[len(vec.keys)-1:]
+		copy(vec.buf[i:], vec.buf[i+1:])
+		vec.buf = vec.buf[len(vec.buf)-1:]
+		vec.cow.delete(i)
+	}
 	return false
 }
 
