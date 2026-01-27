@@ -53,3 +53,8 @@ func (b *bitmap) clone() *bitmap {
 func (b *bitmap) size() int {
 	return len(b.buf)
 }
+
+func (b *bitmap) reset() {
+	b.uniq = 0
+	b.buf = b.buf[:0]
+}

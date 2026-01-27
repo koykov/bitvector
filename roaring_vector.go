@@ -150,7 +150,9 @@ func (vec *roaringVector) WriteTo(w io.Writer) (n int64, err error) {
 }
 
 func (vec *roaringVector) Reset() {
-	// todo implement me
+	vec.keys = vec.keys[:0]
+	vec.buf = vec.buf[:0]
+	vec.cow.reset()
 }
 
 func (vec *roaringVector) hibits(x uint64) uint32 {
