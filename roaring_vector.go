@@ -128,8 +128,15 @@ func (vec *roaringVector) Invert() {
 }
 
 func (vec *roaringVector) Clone() Interface {
-	// todo implement me
-	return nil
+	cpy := &roaringVector{
+		keys: append([]uint32{}, vec.keys...),
+		buf:  make([]*bitmap, len(vec.buf)),
+		cow:  vec.cow.clone(),
+	}
+	for i := 0; i < len(vec.buf); i++ {
+		cpy.buf[i] = vec.buf[i].clone()
+	}
+	return cpy
 }
 
 func (vec *roaringVector) ReadFrom(r io.Reader) (n int64, err error) {

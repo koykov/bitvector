@@ -145,6 +145,13 @@ func (s *bitslice) reset() {
 	s.ln = 0
 }
 
+func (s *bitslice) clone() bitslice {
+	return bitslice{
+		ln:  s.ln,
+		buf: append([]uint64{}, s.buf...),
+	}
+}
+
 func (s *bitslice) String() string {
 	var buf bytes.Buffer
 	buf.Grow(int(s.ln + 2))
