@@ -1,6 +1,10 @@
 package bitvector
 
-import "bytes"
+import (
+	"bytes"
+	"io"
+	"unsafe"
+)
 
 type bitslice struct {
 	ln  uint64
@@ -138,6 +142,41 @@ func (s *bitslice) get(i int) bool {
 
 func (s *bitslice) len() uint64 {
 	return s.ln
+}
+
+func (s *bitslice) writeTo(w io.Writer) (n int64, err error) {
+	uniq := *(*[8]byte)(unsafe.Pointer(&s.ln))
+	var n1 int
+	if n1, err = w.Write(uniq[:]); err != nil {
+		return
+	}
+	n += int64(n1)
+
+	n1 = len(s.buf)
+	ln := *(*[8]byte)(unsafe.Pointer(&n1))
+	if n1, err = w.Write(ln[:]); err != nil {
+		return
+	}
+	n += int64(n1)
+
+	if len(s.buf) == 0 {
+		return
+	}
+
+	type h struct {
+		p    uintptr
+		l, c int
+	}
+	h1 := *(*h)(unsafe.Pointer(&s.buf))
+	h1.l *= 8
+	h1.c *= 8
+	buf := *(*[]byte)(unsafe.Pointer(&h1))
+	if n1, err = w.Write(buf); err != nil {
+		return
+	}
+	n += int64(n1)
+
+	return
 }
 
 func (s *bitslice) reset() {

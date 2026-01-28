@@ -82,8 +82,8 @@ func (b *bitmap) writeTo(w io.Writer) (n int64, err error) {
 		l, c int
 	}
 	h1 := *(*h)(unsafe.Pointer(&b.buf))
-	h1.l *= 8
-	h1.c *= 8
+	h1.l *= 4
+	h1.c *= 4
 	buf := *(*[]byte)(unsafe.Pointer(&h1))
 	if n1, err = w.Write(buf); err != nil {
 		return
