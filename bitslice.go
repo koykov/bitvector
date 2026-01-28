@@ -2,6 +2,7 @@ package bitvector
 
 import (
 	"bytes"
+	"encoding/binary"
 	"io"
 	"unsafe"
 )
@@ -145,16 +146,11 @@ func (s *bitslice) len() uint64 {
 }
 
 func (s *bitslice) writeTo(w io.Writer) (n int64, err error) {
-	uniq := *(*[8]byte)(unsafe.Pointer(&s.ln))
+	var buf [16]byte
+	binary.LittleEndian.PutUint64(buf[0:8], s.ln)
+	binary.LittleEndian.PutUint64(buf[8:16], uint64(len(s.buf)))
 	var n1 int
-	if n1, err = w.Write(uniq[:]); err != nil {
-		return
-	}
-	n += int64(n1)
-
-	n1 = len(s.buf)
-	ln := *(*[8]byte)(unsafe.Pointer(&n1))
-	if n1, err = w.Write(ln[:]); err != nil {
+	if n1, err = w.Write(buf[:]); err != nil {
 		return
 	}
 	n += int64(n1)
@@ -170,8 +166,8 @@ func (s *bitslice) writeTo(w io.Writer) (n int64, err error) {
 	h1 := *(*h)(unsafe.Pointer(&s.buf))
 	h1.l *= 8
 	h1.c *= 8
-	buf := *(*[]byte)(unsafe.Pointer(&h1))
-	if n1, err = w.Write(buf); err != nil {
+	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
+	if n1, err = w.Write(buf1); err != nil {
 		return
 	}
 	n += int64(n1)

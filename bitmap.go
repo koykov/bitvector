@@ -1,6 +1,7 @@
 package bitvector
 
 import (
+	"encoding/binary"
 	"io"
 	"sort"
 	"unsafe"
@@ -59,16 +60,11 @@ func (b *bitmap) size() int {
 }
 
 func (b *bitmap) writeTo(w io.Writer) (n int64, err error) {
-	uniq := *(*[8]byte)(unsafe.Pointer(&b.uniq))
+	var buf [16]byte
+	binary.LittleEndian.PutUint64(buf[0:8], b.uniq)
+	binary.LittleEndian.PutUint64(buf[8:16], uint64(len(b.buf)))
 	var n1 int
-	if n1, err = w.Write(uniq[:]); err != nil {
-		return
-	}
-	n += int64(n1)
-
-	n1 = len(b.buf)
-	ln := *(*[8]byte)(unsafe.Pointer(&n1))
-	if n1, err = w.Write(ln[:]); err != nil {
+	if n1, err = w.Write(buf[:]); err != nil {
 		return
 	}
 	n += int64(n1)
@@ -84,8 +80,8 @@ func (b *bitmap) writeTo(w io.Writer) (n int64, err error) {
 	h1 := *(*h)(unsafe.Pointer(&b.buf))
 	h1.l *= 4
 	h1.c *= 4
-	buf := *(*[]byte)(unsafe.Pointer(&h1))
-	if n1, err = w.Write(buf); err != nil {
+	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
+	if n1, err = w.Write(buf1); err != nil {
 		return
 	}
 	n += int64(n1)
