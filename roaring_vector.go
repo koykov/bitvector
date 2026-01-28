@@ -1,9 +1,17 @@
 package bitvector
 
 import (
+	"encoding/binary"
 	"io"
 	"math"
+	"math/rand"
 	"sort"
+	"unsafe"
+)
+
+const (
+	roaringVectorDumpSignature = 0x9cf814f5923ac3bf
+	roaringVectorDumpVersion   = 1.0
 )
 
 type roaringVector struct {
@@ -22,6 +30,7 @@ func NewRoaringVector(size uint64) (Interface, error) {
 }
 
 func (vec *roaringVector) Set(x uint64) bool {
+	rand.Uint64()
 	hib, lob := vec.hibits(x), vec.lobits(x)
 	i := vec.indexhb(hib)
 	if i < 0 {
@@ -145,8 +154,53 @@ func (vec *roaringVector) ReadFrom(r io.Reader) (n int64, err error) {
 }
 
 func (vec *roaringVector) WriteTo(w io.Writer) (n int64, err error) {
-	// todo implement me
-	return 0, err
+	var (
+		buf [24]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], roaringVectorDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(roaringVectorDumpVersion))
+	binary.LittleEndian.PutUint64(buf[16:24], uint64(len(vec.keys)))
+	m, err = w.Write(buf[:])
+	n += int64(m)
+	if err != nil {
+		return int64(m), err
+	}
+
+	type h struct {
+		p    uintptr
+		l, c int
+	}
+	h1 := *(*h)(unsafe.Pointer(&vec.keys))
+	h1.l *= 4
+	h1.c *= 4
+	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
+	if m, err = w.Write(buf1); err != nil {
+		return
+	}
+	n += int64(m)
+
+	binary.LittleEndian.PutUint64(buf[0:8], uint64(len(vec.buf)))
+	m, err = w.Write(buf[:8])
+	n += int64(m)
+	if err != nil {
+		return int64(m), err
+	}
+	for i := 0; i < len(vec.buf); i++ {
+		n1, err := vec.buf[i].writeTo(w)
+		if err != nil {
+			return
+		}
+		n += n1
+	}
+
+	n1, err := vec.cow.writeTo(w)
+	if err != nil {
+		return
+	}
+	n += n1
+
+	return
 }
 
 func (vec *roaringVector) Reset() {
