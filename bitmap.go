@@ -89,6 +89,11 @@ func (b *bitmap) writeTo(w io.Writer) (n int64, err error) {
 	return
 }
 
+func (b *bitmap) readFrom(r io.Reader) (n int64, err error) {
+	// todo implement me
+	return
+}
+
 func (b *bitmap) reset() {
 	b.uniq = 0
 	b.buf = b.buf[:0]

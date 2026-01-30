@@ -175,6 +175,11 @@ func (s *bitslice) writeTo(w io.Writer) (n int64, err error) {
 	return
 }
 
+func (s *bitslice) readFrom(r io.Reader) (n int64, err error) {
+	// todo implement me
+	return
+}
+
 func (s *bitslice) reset() {
 	s.buf = s.buf[:0]
 	s.ln = 0

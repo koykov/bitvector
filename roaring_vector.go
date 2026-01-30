@@ -132,8 +132,58 @@ func (vec *roaringVector) Clone() Interface {
 }
 
 func (vec *roaringVector) ReadFrom(r io.Reader) (n int64, err error) {
-	// todo implement me
-	return 0, err
+	var (
+		buf [24]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+
+	sign, ver, ln := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
+		binary.LittleEndian.Uint64(buf[16:24])
+
+	if sign != roaringVectorDumpSignature {
+		return n, ErrInvalidSignature
+	}
+	if ver != math.Float64bits(roaringVectorDumpVersion) {
+		return n, ErrVersionMismatch
+	}
+
+	vec.keys = make([]uint32, ln)
+	type h struct {
+		p    uintptr
+		l, c int
+	}
+	h1 := *(*h)(unsafe.Pointer(&vec.keys))
+	h1.l *= 4
+	h1.c *= 4
+	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
+	m, err = r.Read(buf1)
+	n += int64(m)
+	if err != nil {
+		return
+	}
+
+	m, err = r.Read(buf[:8])
+	ln = binary.LittleEndian.Uint64(buf[0:8])
+	vec.buf = make([]*bitmap, ln)
+	var n1 int64
+	for i := uint64(0); i < ln; i++ {
+		vec.buf[i] = &bitmap{}
+		n1, err = vec.buf[i].readFrom(r)
+		n += n1
+		if err != nil {
+			return
+		}
+	}
+
+	n1, err = vec.cow.readFrom(r)
+	n += n1
+
+	return
 }
 
 func (vec *roaringVector) WriteTo(w io.Writer) (n int64, err error) {
