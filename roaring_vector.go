@@ -47,18 +47,6 @@ func (vec *roaringVector) Set(x uint64) bool {
 	return true
 }
 
-func (vec *roaringVector) addhb(i int, hb uint32, bm *bitmap) {
-	vec.keys = append(vec.keys, 0)
-	copy(vec.keys[i+1:], vec.keys[i:])
-	vec.keys[i] = hb
-
-	vec.buf = append(vec.buf, nil)
-	copy(vec.buf[i+1:], vec.buf[i:])
-	vec.buf[i] = bm
-
-	vec.cow.insert(i, false)
-}
-
 func (vec *roaringVector) Xor(uint64) bool {
 	// todo implement me
 	return false
@@ -223,4 +211,16 @@ func (vec *roaringVector) indexhb(hb uint32) int {
 	return sort.Search(n, func(i int) bool {
 		return vec.keys[i] == hb
 	})
+}
+
+func (vec *roaringVector) addhb(i int, hb uint32, bm *bitmap) {
+	vec.keys = append(vec.keys, 0)
+	copy(vec.keys[i+1:], vec.keys[i:])
+	vec.keys[i] = hb
+
+	vec.buf = append(vec.buf, nil)
+	copy(vec.buf[i+1:], vec.buf[i:])
+	vec.buf[i] = bm
+
+	vec.cow.insert(i, false)
 }
