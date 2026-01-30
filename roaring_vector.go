@@ -20,13 +20,8 @@ type roaringVector struct {
 	cow  bitslice
 }
 
-func NewRoaringVector(size uint64) (Interface, error) {
-	if size == 0 {
-		return nil, ErrZeroSize
-	}
-	return &roaringVector{
-		// ...
-	}, nil
+func NewRoaringVector() (Interface, error) {
+	return &roaringVector{}, nil
 }
 
 func (vec *roaringVector) Set(x uint64) bool {
