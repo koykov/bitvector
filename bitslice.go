@@ -176,7 +176,28 @@ func (s *bitslice) writeTo(w io.Writer) (n int64, err error) {
 }
 
 func (s *bitslice) readFrom(r io.Reader) (n int64, err error) {
-	// todo implement me
+	var buf [16]byte
+	var n1 int
+	n1, err = r.Read(buf[:])
+	n += int64(n1)
+	if err != nil {
+		return
+	}
+
+	ln, ln1 := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16])
+	s.ln = ln
+	s.buf = make([]uint64, ln1)
+	type h struct {
+		p    uintptr
+		l, c int
+	}
+	h1 := *(*h)(unsafe.Pointer(&s.buf))
+	h1.l *= 8
+	h1.c *= 8
+	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
+	n1, err = r.Read(buf1)
+	n += int64(n1)
+
 	return
 }
 

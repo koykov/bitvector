@@ -90,7 +90,28 @@ func (b *bitmap) writeTo(w io.Writer) (n int64, err error) {
 }
 
 func (b *bitmap) readFrom(r io.Reader) (n int64, err error) {
-	// todo implement me
+	var buf [16]byte
+	var n1 int
+	n1, err = r.Read(buf[:])
+	n += int64(n1)
+	if err != nil {
+		return
+	}
+
+	uniq, ln := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16])
+	b.uniq = uniq
+	b.buf = make([]uint32, ln)
+	type h struct {
+		p    uintptr
+		l, c int
+	}
+	h1 := *(*h)(unsafe.Pointer(&b.buf))
+	h1.l *= 4
+	h1.c *= 4
+	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
+	n1, err = r.Read(buf1)
+	n += int64(n1)
+
 	return
 }
 
