@@ -159,11 +159,7 @@ func (s *bitslice) writeTo(w io.Writer) (n int64, err error) {
 		return
 	}
 
-	type h struct {
-		p    uintptr
-		l, c int
-	}
-	h1 := *(*h)(unsafe.Pointer(&s.buf))
+	h1 := *(*hslice)(unsafe.Pointer(&s.buf))
 	h1.l *= 8
 	h1.c *= 8
 	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
@@ -187,11 +183,7 @@ func (s *bitslice) readFrom(r io.Reader) (n int64, err error) {
 	ln, ln1 := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16])
 	s.ln = ln
 	s.buf = make([]uint64, ln1)
-	type h struct {
-		p    uintptr
-		l, c int
-	}
-	h1 := *(*h)(unsafe.Pointer(&s.buf))
+	h1 := *(*hslice)(unsafe.Pointer(&s.buf))
 	h1.l *= 8
 	h1.c *= 8
 	buf1 := *(*[]byte)(unsafe.Pointer(&h1))

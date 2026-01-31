@@ -73,11 +73,7 @@ func (b *bitmap) writeTo(w io.Writer) (n int64, err error) {
 		return
 	}
 
-	type h struct {
-		p    uintptr
-		l, c int
-	}
-	h1 := *(*h)(unsafe.Pointer(&b.buf))
+	h1 := *(*hslice)(unsafe.Pointer(&b.buf))
 	h1.l *= 4
 	h1.c *= 4
 	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
@@ -101,11 +97,7 @@ func (b *bitmap) readFrom(r io.Reader) (n int64, err error) {
 	uniq, ln := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16])
 	b.uniq = uniq
 	b.buf = make([]uint32, ln)
-	type h struct {
-		p    uintptr
-		l, c int
-	}
-	h1 := *(*h)(unsafe.Pointer(&b.buf))
+	h1 := *(*hslice)(unsafe.Pointer(&b.buf))
 	h1.l *= 4
 	h1.c *= 4
 	buf1 := *(*[]byte)(unsafe.Pointer(&h1))

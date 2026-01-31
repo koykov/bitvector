@@ -153,11 +153,7 @@ func (vec *roaringVector) ReadFrom(r io.Reader) (n int64, err error) {
 	}
 
 	vec.keys = make([]uint32, ln)
-	type h struct {
-		p    uintptr
-		l, c int
-	}
-	h1 := *(*h)(unsafe.Pointer(&vec.keys))
+	h1 := *(*hslice)(unsafe.Pointer(&vec.keys))
 	h1.l *= 4
 	h1.c *= 4
 	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
@@ -200,11 +196,7 @@ func (vec *roaringVector) WriteTo(w io.Writer) (n int64, err error) {
 		return int64(m), err
 	}
 
-	type h struct {
-		p    uintptr
-		l, c int
-	}
-	h1 := *(*h)(unsafe.Pointer(&vec.keys))
+	h1 := *(*hslice)(unsafe.Pointer(&vec.keys))
 	h1.l *= 4
 	h1.c *= 4
 	buf1 := *(*[]byte)(unsafe.Pointer(&h1))
