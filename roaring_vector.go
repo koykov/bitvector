@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"io"
 	"math"
-	"math/rand"
 	"sort"
 	"unsafe"
 )
@@ -15,6 +14,11 @@ const (
 )
 
 type roaringVector struct {
+	rvector
+	cpy rvector
+}
+
+type rvector struct {
 	keys []uint32
 	buf  []*bitmap
 	cow  bitslice
@@ -25,26 +29,8 @@ func NewRoaringVector() (Interface, error) {
 }
 
 func (vec *roaringVector) Set(x uint64) bool {
-	rand.Uint64()
 	hib, lob := vec.hibits(x), vec.lobits(x)
-	i := vec.indexhb(hib)
-	if i < 0 {
-		bm := bitmap{}
-		bm.add(lob)
-		vec.addhb(-i-1, hib, &bm)
-		return true
-	}
-
-	var bm *bitmap
-	if vec.cow.get(i) {
-		bm = vec.buf[i].clone()
-	} else {
-		bm = vec.buf[i]
-	}
-	bm.add(lob)
-	vec.buf[i] = bm
-
-	return true
+	return vec.setHL(hib, lob)
 }
 
 func (vec *roaringVector) Xor(uint64) bool {
@@ -110,7 +96,35 @@ func (vec *roaringVector) Merge(p Interface) error {
 }
 
 func (vec *roaringVector) Filter(p Interface) error {
-	// todo implement me
+	inst, ok := any(p).(*roaringVector)
+	if !ok {
+		return ErrWrongType
+	}
+	vec.cpy.Reset()
+	var i0, i1 int
+	for i0 < len(vec.keys) && i1 < len(inst.keys) {
+		key0, key1 := vec.keys[i0], inst.keys[i1]
+		if key0 == key1 {
+			bi0, bi1 := vec.indexhb(key0), inst.indexhb(key1)
+			if bi0 == -1 || bi1 == -1 {
+				continue
+			}
+			b0, b1 := vec.buf[bi0], inst.buf[bi1]
+			var j0, j1 int
+			for j0 < len(b0.buf) && j1 < len(b1.buf) {
+				switch {
+				case b0.buf[j0] == b1.buf[j1]:
+					vec.cpy.setHL(key0, b0.buf[j0])
+					j0++
+					j1++
+				case b0.buf[j0] < b1.buf[j1]:
+					j0++
+				case b0.buf[j0] > b1.buf[j1]:
+					j1++
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -120,9 +134,11 @@ func (vec *roaringVector) Invert() {
 
 func (vec *roaringVector) Clone() Interface {
 	cpy := &roaringVector{
-		keys: append([]uint32{}, vec.keys...),
-		buf:  make([]*bitmap, len(vec.buf)),
-		cow:  vec.cow.clone(),
+		rvector: rvector{
+			keys: append([]uint32{}, vec.keys...),
+			buf:  make([]*bitmap, len(vec.buf)),
+			cow:  vec.cow.clone(),
+		},
 	}
 	for i := 0; i < len(vec.buf); i++ {
 		cpy.buf[i] = vec.buf[i].clone()
@@ -228,20 +244,45 @@ func (vec *roaringVector) WriteTo(w io.Writer) (n int64, err error) {
 }
 
 func (vec *roaringVector) Reset() {
+	vec.rvector.Reset()
+}
+
+func (vec *rvector) Reset() {
 	vec.keys = vec.keys[:0]
 	vec.buf = vec.buf[:0]
 	vec.cow.reset()
 }
 
-func (vec *roaringVector) hibits(x uint64) uint32 {
+func (vec *rvector) hibits(x uint64) uint32 {
 	return uint32(x >> 32)
 }
 
-func (vec *roaringVector) lobits(x uint64) uint32 {
+func (vec *rvector) lobits(x uint64) uint32 {
 	return uint32(x & math.MaxUint32)
 }
 
-func (vec *roaringVector) indexhb(hb uint32) int {
+func (vec *rvector) setHL(hib, lob uint32) bool {
+	i := vec.indexhb(hib)
+	if i < 0 {
+		bm := bitmap{}
+		bm.add(lob)
+		vec.addhb(-i-1, hib, &bm)
+		return true
+	}
+
+	var bm *bitmap
+	if vec.cow.get(i) {
+		bm = vec.buf[i].clone()
+	} else {
+		bm = vec.buf[i]
+	}
+	bm.add(lob)
+	vec.buf[i] = bm
+
+	return true
+}
+
+func (vec *rvector) indexhb(hb uint32) int {
 	n := len(vec.keys)
 	if n == 0 {
 		return -1
@@ -254,7 +295,7 @@ func (vec *roaringVector) indexhb(hb uint32) int {
 	})
 }
 
-func (vec *roaringVector) addhb(i int, hb uint32, bm *bitmap) {
+func (vec *rvector) addhb(i int, hb uint32, bm *bitmap) {
 	vec.keys = append(vec.keys, 0)
 	copy(vec.keys[i+1:], vec.keys[i:])
 	vec.keys[i] = hb
@@ -266,7 +307,7 @@ func (vec *roaringVector) addhb(i int, hb uint32, bm *bitmap) {
 	vec.cow.insert(i, false)
 }
 
-func (vec *roaringVector) copyTo(o *roaringVector) {
+func (vec *rvector) copyTo(o *rvector) {
 	o.keys = append(o.keys[:0], vec.keys...)
 	o.buf = o.buf[:0]
 	for i := 0; i < len(vec.buf); i++ {
