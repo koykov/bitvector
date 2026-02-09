@@ -48,8 +48,7 @@ func (vec *roaringVector) Set(x uint64) bool {
 }
 
 func (vec *roaringVector) Xor(uint64) bool {
-	// todo implement me
-	return false
+	return false // not implemented
 }
 
 func (vec *roaringVector) Unset(x uint64) bool {
@@ -265,4 +264,13 @@ func (vec *roaringVector) addhb(i int, hb uint32, bm *bitmap) {
 	vec.buf[i] = bm
 
 	vec.cow.insert(i, false)
+}
+
+func (vec *roaringVector) copyTo(o *roaringVector) {
+	o.keys = append(o.keys[:0], vec.keys...)
+	o.buf = o.buf[:0]
+	for i := 0; i < len(vec.buf); i++ {
+		o.buf = append(o.buf, vec.buf[i].clone())
+	}
+	o.cow = vec.cow.clone()
 }
