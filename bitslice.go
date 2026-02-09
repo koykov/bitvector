@@ -205,6 +205,11 @@ func (s *bitslice) clone() bitslice {
 	}
 }
 
+func (s *bitslice) copyTo(o *bitslice) {
+	o.ln = s.ln
+	o.buf = append(o.buf[:0], s.buf...)
+}
+
 func (s *bitslice) String() string {
 	var buf bytes.Buffer
 	buf.Grow(int(s.ln + 2))

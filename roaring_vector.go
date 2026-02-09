@@ -91,7 +91,22 @@ func (vec *roaringVector) Difference(p Interface) (uint64, error) {
 }
 
 func (vec *roaringVector) Merge(p Interface) error {
-	// todo implement me
+	inst, ok := any(p).(*roaringVector)
+	if !ok {
+		return ErrWrongType
+	}
+	vec.copyTo(&vec.cpy)
+	for i := 0; i < len(inst.keys); i++ {
+		key := inst.keys[i]
+		bi := inst.indexhb(key)
+		if bi < 0 {
+			continue
+		}
+		b := inst.buf[bi]
+		for j := 0; j < len(b.buf); j++ {
+			vec.cpy.setHL(key, b.buf[j])
+		}
+	}
 	return nil
 }
 
@@ -313,5 +328,5 @@ func (vec *rvector) copyTo(o *rvector) {
 	for i := 0; i < len(vec.buf); i++ {
 		o.buf = append(o.buf, vec.buf[i].clone())
 	}
-	o.cow = vec.cow.clone()
+	vec.cow.copyTo(&o.cow)
 }
