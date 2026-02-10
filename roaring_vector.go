@@ -176,7 +176,7 @@ func (vec *roaringVector) Filter(p Interface) error {
 }
 
 func (vec *roaringVector) Invert() {
-	// todo implement me
+	// can't be implemented
 }
 
 func (vec *roaringVector) Clone() Interface {
