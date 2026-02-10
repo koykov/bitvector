@@ -24,10 +24,6 @@ type rvector struct {
 	cow  bitslice
 }
 
-func NewRoaringVector() (Interface, error) {
-	return &roaringVector{}, nil
-}
-
 func (vec *roaringVector) Set(x uint64) bool {
 	hib, lob := vec.hibits(x), vec.lobits(x)
 	return vec.setHL(hib, lob)
