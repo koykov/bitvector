@@ -60,14 +60,7 @@ func (vec *roaringVector) Unset(x uint64) bool {
 
 func (vec *roaringVector) Get(x uint64) uint8 {
 	hib, lob := vec.hibits(x), vec.lobits(x)
-	i := vec.indexhb(hib)
-	if i < 0 || i >= len(vec.buf) {
-		return 0
-	}
-	if j := vec.buf[i].index(lob); j >= 0 {
-		return 1
-	}
-	return 0
+	return vec.getHL(hib, lob)
 }
 
 func (vec *roaringVector) Size() uint64 {
@@ -86,8 +79,47 @@ func (vec *roaringVector) Popcnt() (c uint64) {
 }
 
 func (vec *roaringVector) Difference(p Interface) (uint64, error) {
-	// todo implement me
-	return 0, nil
+	inst, ok := any(p).(*roaringVector)
+	if !ok {
+		return 0, ErrWrongType
+	}
+	var c uint64
+	for i := 0; i < len(vec.keys); i++ {
+		bi0, bi1 := vec.indexhb(vec.keys[i]), inst.indexhb(vec.keys[i])
+		if bi0 < 0 {
+			continue
+		}
+		if bi1 < 0 {
+			c += uint64(vec.buf[bi0].size())
+		} else {
+			b0, b1 := vec.buf[bi0], inst.buf[bi1]
+			var j0, j1 int
+			for j0 < len(b0.buf) && j1 < len(b1.buf) {
+				switch {
+				case b0.buf[j0] == b1.buf[j1]:
+					j0++
+					j1++
+				case b0.buf[j0] < b1.buf[j1]:
+					c++
+					j0++
+				case b0.buf[j0] > b1.buf[j1]:
+					c++
+					j1++
+				}
+			}
+			c += uint64((len(b0.buf) - j0) + (len(b1.buf) - j1))
+		}
+	}
+	for i := 0; i < len(inst.keys); i++ {
+		bi0, bi1 := vec.indexhb(inst.keys[i]), inst.indexhb(inst.keys[i])
+		if bi1 < 0 {
+			continue
+		}
+		if bi0 < 0 {
+			c += uint64(inst.buf[bi1].size())
+		}
+	}
+	return c, nil
 }
 
 func (vec *roaringVector) Merge(p Interface) error {
@@ -295,6 +327,17 @@ func (vec *rvector) setHL(hib, lob uint32) bool {
 	vec.buf[i] = bm
 
 	return true
+}
+
+func (vec *rvector) getHL(hib, lob uint32) uint8 {
+	i := vec.indexhb(hib)
+	if i < 0 || i >= len(vec.buf) {
+		return 0
+	}
+	if j := vec.buf[i].index(lob); j >= 0 {
+		return 1
+	}
+	return 0
 }
 
 func (vec *rvector) indexhb(hb uint32) int {
