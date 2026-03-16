@@ -7,10 +7,10 @@ import (
 	"math/bits"
 	"unsafe"
 
-	"github.com/koykov/simd/bitwise64"
-	"github.com/koykov/simd/hamming64"
-	"github.com/koykov/simd/memclr64"
-	"github.com/koykov/simd/popcnt64"
+	"github.com/koykov/simd/bitwise"
+	"github.com/koykov/simd/hamming"
+	"github.com/koykov/simd/memclr"
+	"github.com/koykov/simd/popcnt"
 )
 
 const (
@@ -101,7 +101,7 @@ func (vec *vector) Popcnt() (r uint64) {
 		h := sh{p: uintptr(unsafe.Pointer(&buf[0])), l: n8, c: n8}
 		buf64 := *(*[]uint64)(unsafe.Pointer(&h))
 		// Apply vectorised population count over uint64 slice.
-		r += popcnt64.Count(buf64)
+		r += popcnt.Count64(buf64)
 		// Rest of bytes will process below.
 		buf = buf[n8*8:]
 	}
@@ -126,17 +126,17 @@ func (vec *vector) Difference(other Interface) (r uint64, err error) {
 	}
 	buf := vec.buf
 	obuf := ovec.buf
-	diff := hamming64.DistanceBytes(buf, obuf)
+	diff := hamming.Distance(buf, obuf)
 	r = uint64(diff)
 	return
 }
 
 func (vec *vector) Merge(other Interface) error {
-	return vec.bitwise(other, bitwise64.OrBytes)
+	return vec.bitwise(other, bitwise.Or)
 }
 
 func (vec *vector) Filter(other Interface) error {
-	return vec.bitwise(other, bitwise64.AndBytes)
+	return vec.bitwise(other, bitwise.And)
 }
 
 func (vec *vector) bitwise(other Interface, fn func(a, b []byte)) error {
@@ -154,7 +154,7 @@ func (vec *vector) bitwise(other Interface, fn func(a, b []byte)) error {
 }
 
 func (vec *vector) Invert() {
-	bitwise64.NotBytes(vec.buf)
+	bitwise.Not(vec.buf)
 }
 
 func (vec *vector) Clone() Interface {
@@ -172,7 +172,7 @@ func (vec *vector) Reset() {
 	if len(vec.buf) == 0 {
 		return
 	}
-	memclr64.ClearBytes(vec.buf)
+	memclr.Clear(vec.buf)
 }
 
 func (vec *vector) ReadFrom(r io.Reader) (n int64, err error) {

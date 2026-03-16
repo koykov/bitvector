@@ -272,7 +272,7 @@ func (vec *roaringVector) WriteTo(w io.Writer) (n int64, err error) {
 	for i := 0; i < len(vec.buf); i++ {
 		n1, err := vec.buf[i].writeTo(w)
 		if err != nil {
-			return
+			return n, err
 		}
 		n += n1
 	}
